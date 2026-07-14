@@ -1,0 +1,29 @@
+namespace SoftlarePMS.Domain.Entities;
+
+public class User: BaseEntity
+{
+    public int InternalId { get; set; }
+
+    public Guid? EmployeeId { get; set; }
+
+    public string Username { get; set; } = string.Empty;
+
+    public string Email { get; set; } = string.Empty;
+
+    public string PasswordHash { get; set; } = string.Empty;
+
+    public bool IsActive { get; set; } = true;
+
+    // Navigation properties
+    public virtual Employee? Employee { get; set; }
+
+    public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
+
+    public virtual ICollection<Employee> CreatedEmployees { get; set; } = new HashSet<Employee>();
+
+    public virtual ICollection<EmployeeCompensation> CreatedCompensations { get; set; } = new HashSet<EmployeeCompensation>();
+
+    public virtual ICollection<EmployeeDocument> CreatedDocuments { get; set; } = new HashSet<EmployeeDocument>();
+
+    public virtual ICollection<EmployeeNote> CreatedNotes { get; set; } = new HashSet<EmployeeNote>();
+}
