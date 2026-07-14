@@ -33,7 +33,7 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.HasMany(e => e.Addresses)
             .WithOne(a => a.Employee)
             .HasForeignKey(a => a.EmployeeId)
-            .OnDelete(DeleteBehavior.Cascade); // Çalışan silinirse adresi de silinsin
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(e => e.Compensations)
             .WithOne(c => c.Employee)

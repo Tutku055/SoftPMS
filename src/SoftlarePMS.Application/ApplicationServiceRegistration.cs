@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using SoftlarePMS.Application.Services.Interfaces;
 using SoftlarePMS.Application.Services.Implementations;
@@ -8,6 +9,8 @@ public static class ApplicationServiceRegistration
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
         services.AddScoped<IEmployeeService, EmployeeService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IPermissionService, PermissionService>();
