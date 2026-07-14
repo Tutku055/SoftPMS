@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using SoftlarePMS.Persistence.Context;
-using YourProject.Domain.Repositories;
+using SoftlarePMS.Domain.Repositories;
 
 namespace SoftlarePMS.Persistence.Repositories;
 

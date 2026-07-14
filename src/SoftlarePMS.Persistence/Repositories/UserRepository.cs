@@ -32,9 +32,9 @@ public class UserRepository : Repository<User>, IUserRepository
     //Get user by id with roles
     public async Task<User?> GetByIdWithRolesAsync(Guid id)
     {
-        // Many-to-Many ilişkisini UserRole üzerinden çekiyoruz
         return await _context.Users
-            .Include(u => u.Email) // Opsiyonel diğer ilişkileriniz
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Id == id);
     }
 }
