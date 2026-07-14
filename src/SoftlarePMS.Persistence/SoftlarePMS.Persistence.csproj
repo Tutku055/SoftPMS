@@ -16,8 +16,4 @@
     <ProjectReference Include="..\SoftlarePMS.Domain\SoftlarePMS.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Repositories\" />
-  </ItemGroup>
-
 </Project>
