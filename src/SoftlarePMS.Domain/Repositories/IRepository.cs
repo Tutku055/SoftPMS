@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace YourProject.Domain.Repositories;
+namespace SoftlarePMS.Domain.Repositories;
 
 public interface IRepository<T> where T : class
 {

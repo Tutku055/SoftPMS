@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using SoftlarePMS.Domain.Entities;
-using YourProject.Domain.Repositories;
 
 namespace SoftlarePMS.Domain.Repositories
 {
