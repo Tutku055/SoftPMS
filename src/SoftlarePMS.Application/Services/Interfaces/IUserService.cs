@@ -2,13 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SoftlarePMS.Application.DTOs.User;
+using SoftlarePMS.Domain.Entities;
 
 namespace SoftlarePMS.Application.Services.Interfaces;
 
-public interface IUserService
+public interface IUserService : IBaseService<User, UserDto, CreateUserDto, UpdateUserDto>
 {
-    Task<IEnumerable<UserDto>> GetAllAsync();
-    Task<UserDto> GetByIdAsync(Guid id);
-    Task<UserDto> CreateAsync(CreateUserDto dto);
-    Task DeleteAsync(Guid id);
 }

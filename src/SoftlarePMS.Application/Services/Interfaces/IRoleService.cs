@@ -2,13 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SoftlarePMS.Application.DTOs.Role;
+using SoftlarePMS.Domain.Entities;
 
 namespace SoftlarePMS.Application.Services.Interfaces;
 
-public interface IRoleService
+public interface IRoleService : IBaseService<Role, RoleDto, CreateRoleDto, UpdateRoleDto>
 {
-    Task<IEnumerable<RoleDto>> GetAllAsync();
-    Task<RoleDto> GetByIdAsync(Guid id);
-    Task<RoleDto> CreateAsync(CreateRoleDto dto);
-    Task DeleteAsync(Guid id);
 }
