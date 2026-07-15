@@ -1,8 +1,9 @@
-﻿namespace SoftlarePMS.Application.DTOs.Auth;
+namespace SoftlarePMS.Application.DTOs.Auth;
 
 public record LoginResponseDto(
-    string Token,
-    DateTime Expiration,
+    string AccessToken,
+    string RefreshToken,
+    DateTime AccessTokenExpiration,
     string Username,
     string Email
 );

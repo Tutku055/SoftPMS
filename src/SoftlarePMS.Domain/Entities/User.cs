@@ -12,6 +12,10 @@ public class User : BaseEntity
 
     public bool IsActive { get; set; } = true;
 
+    public string? RefreshToken { get; set; }
+
+    public DateTime? RefreshTokenExpiryTime { get; set; }
+
     // Navigation properties
     public virtual Employee? Employee { get; set; }
 

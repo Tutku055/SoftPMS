@@ -7,37 +7,46 @@ using SoftlarePMS.Domain.Exceptions;
 namespace SoftlarePMS.Application.Features.Auth.Commands.Login;
 
 /// <summary>
-/// Validates credentials against the database, then delegates token generation to
-/// IJwtTokenService (implemented in the Infrastructure layer).
-/// Throws Domain.Exceptions.NotFoundException when the user does not exist or is inactive.
-/// Throws Domain.Exceptions.DomainException when the password is incorrect.
+/// Validates credentials, generates both an access token and a refresh token,
+/// persists the refresh token on the User record, and returns both to the caller.
 /// </summary>
 public sealed class LoginCommandHandler(
     IApplicationDbContext context,
-    IJwtTokenService jwtTokenService)
+    IJwtTokenService jwtTokenService,
+    IDateTime dateTime)
     : IRequestHandler<LoginCommand, LoginResponseDto>
 {
     public async Task<LoginResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        // Fetch user with roles in a single query
         var user = await context.Users
             .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                    .ThenInclude(r => r.RolePermissions)
+                        .ThenInclude(rp => rp.Permission)
             .FirstOrDefaultAsync(u => u.Username == request.Username && u.IsActive, cancellationToken)
             ?? throw new NotFoundException(nameof(Domain.Entities.User), request.Username);
 
-        // Verify password hash — BCrypt.Verify is the recommended pattern; we guard via DomainException
-        var passwordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
-        if (!passwordValid)
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new DomainException("Invalid credentials.");
 
-        // Resolve role names for the JWT claims
-        var roleNames = user.UserRoles
-            .Select(ur => ur.Role?.Name ?? string.Empty)
-            .Where(r => !string.IsNullOrEmpty(r))
+        var permissions = user.UserRoles
+            .SelectMany(ur => ur.Role.RolePermissions)
+            .Select(rp => rp.Permission.Name)
+            .Distinct()
             .ToList();
 
-        var (token, expiration) = jwtTokenService.GenerateToken(user, roleNames);
+        var accessToken = jwtTokenService.GenerateAccessToken(user, permissions);
+        var refreshToken = jwtTokenService.GenerateRefreshToken();
 
-        return new LoginResponseDto(token, expiration, user.Username, user.Email);
+        // Persist the refresh token — tracked entity, no explicit Update() call needed
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiryTime = dateTime.UtcNow.AddDays(7);
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        // Decode expiration from the generated token for the response
+        var tokenExpiration = dateTime.UtcNow.AddMinutes(15);
+
+        return new LoginResponseDto(accessToken, refreshToken, tokenExpiration, user.Username, user.Email);
     }
 }

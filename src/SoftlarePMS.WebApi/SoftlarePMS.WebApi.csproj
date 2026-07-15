@@ -10,11 +10,19 @@
 
   <ItemGroup>
     <!-- Removed buggy Microsoft.AspNetCore.OpenApi v10 preview -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Scalar.AspNetCore" Version="2.16.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SoftlarePMS.Application\SoftlarePMS.Application.csproj" />
+    <ProjectReference Include="..\SoftlarePMS.Infrastructure\SoftlarePMS.Infrastructure.csproj" />
+    <ProjectReference Include="..\SoftlarePMS.Persistence\SoftlarePMS.Persistence.csproj" />
     <Folder Include="Controllers\" />
   </ItemGroup>
 

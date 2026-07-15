@@ -1,11 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using SoftlarePMS.Application.Common.Interfaces;
-using SoftlarePMS.Domain.Repositories;
-using SoftlarePMS.Domain.UnitOfWork;
 using SoftlarePMS.Persistence.Context;
 using SoftlarePMS.Persistence.Interceptors;
-using SoftlarePMS.Persistence.Repositories;
 
 namespace SoftlarePMS.Persistence;
 
