@@ -32,18 +32,6 @@ public static class PersistenceServiceRegistration
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<SoftlarePMSDbContext>());
 
-        // Generic repository
-        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
-        // Specific repositories
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IRoleRepository, RoleRepository>();
-        services.AddScoped<IPermissionRepository, PermissionRepository>();
-        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
-
-        // Unit of Work
-        services.AddScoped<IUnitOfWork, SoftlarePMS.Persistence.UnitOfWork.UnitOfWork>();
-
         return services;
     }
 }
