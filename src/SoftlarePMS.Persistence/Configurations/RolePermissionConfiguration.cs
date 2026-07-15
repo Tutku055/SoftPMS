@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SoftlarePMS.Domain.Entities;
@@ -11,18 +8,16 @@ public class RolePermissionConfiguration : IEntityTypeConfiguration<RolePermissi
 {
     public void Configure(EntityTypeBuilder<RolePermission> builder)
     {
-        // Define composite primary key
+        // Composite PK using Guid keys — aligns with Role.Id and Permission.Id
         builder.HasKey(rp => new { rp.RoleId, rp.PermissionId });
 
-        //Define relationships with Role and Permission entities
-        builder.HasOne<Role>()
-            .WithMany()
+        builder.HasOne(rp => rp.Role)
+            .WithMany(r => r.RolePermissions)
             .HasForeignKey(rp => rp.RoleId)
-            .OnDelete(DeleteBehavior.Cascade); 
+            .OnDelete(DeleteBehavior.Cascade);
 
-        
-        builder.HasOne<Permission>()
-            .WithMany()
+        builder.HasOne(rp => rp.Permission)
+            .WithMany(p => p.RolePermissions)
             .HasForeignKey(rp => rp.PermissionId)
             .OnDelete(DeleteBehavior.Cascade);
     }

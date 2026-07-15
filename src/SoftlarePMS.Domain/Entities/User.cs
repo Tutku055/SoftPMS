@@ -1,9 +1,7 @@
 namespace SoftlarePMS.Domain.Entities;
 
-public class User: BaseEntity
+public class User : BaseEntity
 {
-    public int InternalId { get; set; }
-
     public Guid? EmployeeId { get; set; }
 
     public string Username { get; set; } = string.Empty;
@@ -27,3 +25,4 @@ public class User: BaseEntity
 
     public virtual ICollection<EmployeeNote> CreatedNotes { get; set; } = new HashSet<EmployeeNote>();
 }
+

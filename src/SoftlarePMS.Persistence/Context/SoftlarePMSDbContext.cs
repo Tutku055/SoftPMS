@@ -1,9 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using SoftlarePMS.Application.Common.Interfaces;
 using SoftlarePMS.Domain.Entities;
 
 namespace SoftlarePMS.Persistence.Context;
 
-public class SoftlarePMSDbContext : DbContext
+/// <summary>
+/// The EF Core DbContext for SoftlarePMS.
+/// Implements IApplicationDbContext so MediatR handlers can depend on the interface
+/// without importing the Persistence assembly.
+/// Audit logging is handled exclusively by AuditSaveChangesInterceptor (registered in DI);
+/// no SaveChangesAsync override is used here — the DbContext stays clean.
+/// </summary>
+public class SoftlarePMSDbContext : DbContext, IApplicationDbContext
 {
     public SoftlarePMSDbContext(DbContextOptions<SoftlarePMSDbContext> options) : base(options)
     {
@@ -26,26 +34,15 @@ public class SoftlarePMSDbContext : DbContext
     public DbSet<EmployeeReference> EmployeeReferences { get; set; }
     #endregion
 
+    #region Audit
+    public DbSet<AuditLog> AuditLogs { get; set; }
+    #endregion
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        //Will automatically apply all configurations from the assembly where SoftlarePMSDbContext is defined.
+        // Automatically applies all IEntityTypeConfiguration<T> classes in this assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SoftlarePMSDbContext).Assembly);
-    }
-
-    // Override SaveChangesAsync to automatically set CreatedAt for new entities
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        var entries = ChangeTracker
-            .Entries()
-            .Where(e => e.Entity is BaseEntity && e.State == EntityState.Added);
-
-        foreach (var entityEntry in entries)
-        {
-            ((BaseEntity)entityEntry.Entity).CreatedAt = DateTime.UtcNow;
-        }
-
-        return base.SaveChangesAsync(cancellationToken);
     }
 }

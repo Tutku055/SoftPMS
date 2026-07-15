@@ -16,7 +16,7 @@ public class EmployeeCompensation: BaseEntity
 
     public DateTime? EndDate { get; set; }
 
-    public int CreatedByUserId { get; set; }
+    public Guid CreatedByUserId { get; set; }
 
     // Navigation properties
     public virtual Employee Employee { get; set; } = null!;

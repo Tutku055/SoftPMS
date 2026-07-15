@@ -1,0 +1,25 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SoftlarePMS.Domain.Entities;
+
+namespace SoftlarePMS.Persistence.Configurations;
+
+public class RoleConfiguration : IEntityTypeConfiguration<Role>
+{
+    public void Configure(EntityTypeBuilder<Role> builder)
+    {
+        builder.HasKey(r => r.Id);
+
+        builder.Property(r => r.Name)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        // Role names must be unique — e.g., "Admin", "HR Manager", "Viewer"
+        builder.HasIndex(r => r.Name)
+            .IsUnique()
+            .HasDatabaseName("IX_Roles_Name");
+
+        builder.Property(r => r.Description)
+            .HasMaxLength(500);
+    }
+}

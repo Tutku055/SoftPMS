@@ -19,6 +19,8 @@ public class ApplicationMappingProfile : Profile
         // Employee mappings
         CreateMap<Employee, EmployeeDto>();
         CreateMap<Employee, EmployeeDetailDto>();
+        // Downcast for facade: detail -> slim DTO
+        CreateMap<EmployeeDetailDto, EmployeeDto>();
         CreateMap<CreateEmployeeDto, Employee>();
         CreateMap<UpdateEmployeeDto, Employee>()
             .ForMember(d => d.Id, o => o.Ignore())
@@ -28,13 +30,17 @@ public class ApplicationMappingProfile : Profile
         CreateMap<EmployeeAddress, EmployeeAddressDto>()
             .ForMember(d => d.AddressTitle, o => o.MapFrom(s => s.AddressLine))
             .ForMember(d => d.ZipCode, o => o.MapFrom(s => s.PostalCode))
-            .ForMember(d => d.District, o => o.MapFrom(s => s.State));
+            .ForMember(d => d.District, o => o.MapFrom(s => s.State))
+            .ForMember(d => d.FullAddress, o => o.MapFrom(s =>
+                $"{s.AddressLine}, {s.PostalCode} {s.City}, {s.Country}"));
         CreateMap<CreateEmployeeAddressDto, EmployeeAddress>()
             .ForMember(d => d.AddressLine, o => o.MapFrom(s => s.AddressTitle))
             .ForMember(d => d.PostalCode, o => o.MapFrom(s => s.ZipCode))
             .ForMember(d => d.State, o => o.MapFrom(s => s.District))
             .ForMember(d => d.EmployeeId, o => o.Ignore())
             .ForMember(d => d.IsPrimary, o => o.Ignore())
+            .ForMember(d => d.StartDate, o => o.Ignore())
+            .ForMember(d => d.EndDate, o => o.Ignore())
             .ForMember(d => d.Employee, o => o.Ignore());
         CreateMap<UpdateEmployeeAddressDto, EmployeeAddress>()
             .ForMember(d => d.Id, o => o.Ignore())
@@ -44,6 +50,8 @@ public class ApplicationMappingProfile : Profile
             .ForMember(d => d.State, o => o.MapFrom(s => s.District))
             .ForMember(d => d.EmployeeId, o => o.Ignore())
             .ForMember(d => d.IsPrimary, o => o.Ignore())
+            .ForMember(d => d.StartDate, o => o.Ignore())
+            .ForMember(d => d.EndDate, o => o.Ignore())
             .ForMember(d => d.Employee, o => o.Ignore());
 
         // Employee compensation mappings

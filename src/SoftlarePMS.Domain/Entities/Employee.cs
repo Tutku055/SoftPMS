@@ -32,7 +32,7 @@ public class Employee: BaseEntity
 
     public bool IsDeleted { get; set; } = false;
 
-    public int CreatedByUserId { get; set; }
+    public Guid CreatedByUserId { get; set; }
 
     // Navigation properties
     public virtual User CreatedByUser { get; set; } = null!;

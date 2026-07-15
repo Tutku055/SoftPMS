@@ -8,7 +8,7 @@ public class EmployeeNote: BaseEntity
 
     public string Content { get; set; } = string.Empty;
 
-    public int CreatedByUserId { get; set; }
+    public Guid CreatedByUserId { get; set; }
 
     // Navigation properties
     public virtual Employee Employee { get; set; } = null!;
