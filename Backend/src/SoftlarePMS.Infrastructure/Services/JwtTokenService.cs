@@ -70,4 +70,12 @@ public sealed class JwtTokenService(IOptions<JwtSettings> options) : IJwtTokenSe
 
         return principal;
     }
+
+    /// <inheritdoc/>
+    public DateTime GetAccessTokenExpiry(DateTime issuedAt) =>
+        issuedAt.AddMinutes(_settings.AccessTokenExpirationInMinutes);
+
+    /// <inheritdoc/>
+    public DateTime GetRefreshTokenExpiry(DateTime issuedAt) =>
+        issuedAt.AddDays(_settings.RefreshTokenExpirationInDays);
 }

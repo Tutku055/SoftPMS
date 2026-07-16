@@ -59,7 +59,7 @@ public sealed class RefreshTokenCommandHandler(
         var newRefreshToken = jwtTokenService.GenerateRefreshToken();
 
         user.RefreshToken = newRefreshToken;
-        user.RefreshTokenExpiryTime = dateTime.UtcNow.AddDays(7);
+        user.RefreshTokenExpiryTime = jwtTokenService.GetRefreshTokenExpiry(dateTime.UtcNow);
 
         await context.SaveChangesAsync(cancellationToken);
 

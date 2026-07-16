@@ -92,11 +92,15 @@ try
 {
     await DatabaseSeeder.SeedAsync(app.Services);
 }
+catch (OperationCanceledException)
+{
+    // Application is shutting down during seed — not a database error, just re-throw.
+    throw;
+}
 catch (Exception ex)
 {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
     logger.LogCritical(ex, "An unhandled exception occurred during database seeding.");
-    // Optionally throw, but usually we just want to log it and let the app start or fail gracefully
     throw;
 }
 

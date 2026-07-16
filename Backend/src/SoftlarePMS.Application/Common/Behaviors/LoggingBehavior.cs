@@ -25,17 +25,32 @@ public sealed class LoggingBehavior<TRequest, TResponse>(
         logger.LogInformation("Handling {RequestName}", requestName);
 
         var stopwatch = Stopwatch.StartNew();
-        TResponse response;
+        Exception? caughtException = null;
+        TResponse response = default!;
 
         try
         {
             response = await next(cancellationToken);
         }
+        catch (Exception ex)
+        {
+            caughtException = ex;
+            throw;
+        }
         finally
         {
             stopwatch.Stop();
 
-            if (stopwatch.ElapsedMilliseconds > SlowRequestThresholdMs)
+            if (caughtException is not null)
+            {
+                // Log failures separately — do not report them as successful completions
+                logger.LogError(
+                    caughtException,
+                    "Request {RequestName} failed after {ElapsedMs} ms",
+                    requestName,
+                    stopwatch.ElapsedMilliseconds);
+            }
+            else if (stopwatch.ElapsedMilliseconds > SlowRequestThresholdMs)
             {
                 logger.LogWarning(
                     "Slow request detected: {RequestName} took {ElapsedMs} ms",

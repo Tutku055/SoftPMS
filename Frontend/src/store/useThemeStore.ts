@@ -1,23 +1,19 @@
-import { create } from "zustand";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface ThemeState {
-  isDarkMode: boolean;
+  mode: 'light' | 'dark';
   toggleTheme: () => void;
 }
 
-export const useThemeStore = create<ThemeState>((set) => {
-  // Retrieve the saved theme from localStorage
-  const savedTheme = localStorage.getItem("app-theme");
-  const initialDark = savedTheme === "dark";
-
-  return {
-    isDarkMode: initialDark,
-    toggleTheme: () =>
-      set((state) => {
-        const newMode = !state.isDarkMode;
-        // Save the new theme to localStorage
-        localStorage.setItem("app-theme", newMode ? "dark" : "light");
-        return { isDarkMode: newMode };
-      }),
-  };
-});
+export const useThemeStore = create<ThemeState>()(
+  persist(
+    (set) => ({
+      mode: 'light',
+      toggleTheme: () => set((state) => ({ mode: state.mode === 'light' ? 'dark' : 'light' })),
+    }),
+    {
+      name: 'theme-storage',
+    }
+  )
+);

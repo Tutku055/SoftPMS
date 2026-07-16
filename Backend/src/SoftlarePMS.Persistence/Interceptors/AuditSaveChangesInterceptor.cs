@@ -13,11 +13,14 @@ namespace SoftlarePMS.Persistence.Interceptors;
 /// </summary>
 public sealed class AuditSaveChangesInterceptor(ICurrentUserService currentUser) : SaveChangesInterceptor
 {
-    // JSON serializer options — write indented for readability in the audit table
+    // JSON serializer options — compact output for the audit table.
+    // ReferenceHandler.IgnoreCycles prevents JsonException when entity navigation
+    // properties form circular references (e.g. Employee ↔ EmployeeAddress).
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = false,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+        ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
     };
 
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(

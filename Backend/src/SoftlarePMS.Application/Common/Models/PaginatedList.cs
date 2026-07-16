@@ -27,12 +27,23 @@ public sealed class PaginatedList<T>
     /// <summary>
     /// Executes the IQueryable asynchronously after applying Skip/Take, then wraps the result.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="pageNumber"/> is less than 1 or <paramref name="pageSize"/> is less than 1.
+    /// </exception>
     public static async Task<PaginatedList<T>> CreateAsync(
         IQueryable<T> source,
         int pageNumber,
         int pageSize,
         CancellationToken cancellationToken = default)
     {
+        if (pageNumber < 1)
+            throw new ArgumentOutOfRangeException(nameof(pageNumber), pageNumber,
+                "Page number must be greater than or equal to 1.");
+
+        if (pageSize < 1)
+            throw new ArgumentOutOfRangeException(nameof(pageSize), pageSize,
+                "Page size must be greater than or equal to 1.");
+
         var totalCount = await source.CountAsync(cancellationToken);
 
         var items = await source

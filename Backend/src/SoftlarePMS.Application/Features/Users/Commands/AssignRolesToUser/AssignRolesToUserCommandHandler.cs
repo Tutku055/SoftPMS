@@ -11,24 +11,31 @@ public sealed class AssignRolesToUserCommandHandler(IApplicationDbContext contex
 {
     public async Task<Unit> Handle(AssignRolesToUserCommand request, CancellationToken cancellationToken)
     {
+        // Normalise: treat a null list as an empty list (removes all roles)
+        var roleIds = request.RoleIds ?? [];
+
         var user = await context.Users
             .Include(u => u.UserRoles)
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)
             ?? throw new NotFoundException(nameof(User), request.UserId);
 
         // Validate all requested roles exist
-        var roles = await context.Roles
-            .Where(r => request.RoleIds.Contains(r.Id))
-            .ToListAsync(cancellationToken);
+        var distinctRoleIds = roleIds.Distinct().ToList();
 
-        if (roles.Count != request.RoleIds.Distinct().Count())
-            throw new NotFoundException(nameof(Role), "one or more requested role IDs");
+        if (distinctRoleIds.Count > 0)
+        {
+            var roles = await context.Roles
+                .Where(r => distinctRoleIds.Contains(r.Id))
+                .ToListAsync(cancellationToken);
+
+            if (roles.Count != distinctRoleIds.Count)
+                throw new NotFoundException(nameof(Role), "one or more requested role IDs");
+        }
 
         // Replace the full set (idempotent)
         context.UserRoles.RemoveRange(user.UserRoles);
 
-        var newLinks = request.RoleIds
-            .Distinct()
+        var newLinks = distinctRoleIds
             .Select(rid => new UserRole { UserId = user.Id, RoleId = rid });
 
         await context.UserRoles.AddRangeAsync(newLinks, cancellationToken);

@@ -40,12 +40,12 @@ public sealed class LoginCommandHandler(
 
         // Persist the refresh token — tracked entity, no explicit Update() call needed
         user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = dateTime.UtcNow.AddDays(7);
+        user.RefreshTokenExpiryTime = jwtTokenService.GetRefreshTokenExpiry(dateTime.UtcNow);
 
         await context.SaveChangesAsync(cancellationToken);
 
-        // Decode expiration from the generated token for the response
-        var tokenExpiration = dateTime.UtcNow.AddMinutes(15);
+        // Use the service to get the correct expiry — avoids hardcoding or drift from JwtSettings
+        var tokenExpiration = jwtTokenService.GetAccessTokenExpiry(dateTime.UtcNow);
 
         return new LoginResponseDto(accessToken, refreshToken, tokenExpiration, user.Username, user.Email);
     }

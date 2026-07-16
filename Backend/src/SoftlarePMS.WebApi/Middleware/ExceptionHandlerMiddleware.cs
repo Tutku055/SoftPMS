@@ -24,6 +24,16 @@ public sealed class ExceptionHandlerMiddleware(
         }
         catch (Exception ex)
         {
+            // If headers have already been sent, we cannot change status code or write a body.
+            // Re-throw and let Kestrel abort the connection cleanly.
+            if (context.Response.HasStarted)
+            {
+                logger.LogError(ex,
+                    "Exception occurred after response had started on {Method} {Path}",
+                    context.Request.Method, context.Request.Path);
+                throw;
+            }
+
             await HandleExceptionAsync(context, ex);
         }
     }
