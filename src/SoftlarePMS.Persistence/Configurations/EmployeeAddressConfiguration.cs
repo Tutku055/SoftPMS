@@ -40,5 +40,8 @@ public class EmployeeAddressConfiguration : IEntityTypeConfiguration<EmployeeAdd
         // (WHERE EndDate IS NULL is a common hot path)
         builder.HasIndex(a => new { a.EmployeeId, a.EndDate })
             .HasDatabaseName("IX_EmployeeAddresses_EmployeeId_EndDate");
+
+        // Global query filter to match Employee soft delete
+        builder.HasQueryFilter(a => !a.Employee.IsDeleted);
     }
 }

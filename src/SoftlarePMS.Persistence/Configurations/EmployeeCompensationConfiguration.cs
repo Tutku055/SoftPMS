@@ -38,5 +38,8 @@ public class EmployeeCompensationConfiguration : IEntityTypeConfiguration<Employ
             .WithMany(u => u.CreatedCompensations)
             .HasForeignKey(c => c.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Global query filter to match Employee soft delete
+        builder.HasQueryFilter(c => !c.Employee.IsDeleted);
     }
 }

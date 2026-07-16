@@ -27,5 +27,8 @@ public class EmployeeDocumentConfiguration : IEntityTypeConfiguration<EmployeeDo
             .WithMany(u => u.CreatedDocuments)
             .HasForeignKey(d => d.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Global query filter to match Employee soft delete
+        builder.HasQueryFilter(d => !d.Employee.IsDeleted);
     }
 }

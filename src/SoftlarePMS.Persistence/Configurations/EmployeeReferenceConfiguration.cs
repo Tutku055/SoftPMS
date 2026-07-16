@@ -35,5 +35,8 @@ public class EmployeeReferenceConfiguration : IEntityTypeConfiguration<EmployeeR
             .WithMany(e => e.References)
             .HasForeignKey(r => r.EmployeeId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Global query filter to match Employee soft delete
+        builder.HasQueryFilter(r => !r.Employee.IsDeleted);
     }
 }

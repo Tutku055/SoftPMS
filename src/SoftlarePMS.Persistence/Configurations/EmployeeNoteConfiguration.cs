@@ -29,5 +29,8 @@ public class EmployeeNoteConfiguration : IEntityTypeConfiguration<EmployeeNote>
             .WithMany(u => u.CreatedNotes)
             .HasForeignKey(n => n.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Global query filter to match Employee soft delete
+        builder.HasQueryFilter(n => !n.Employee.IsDeleted);
     }
 }

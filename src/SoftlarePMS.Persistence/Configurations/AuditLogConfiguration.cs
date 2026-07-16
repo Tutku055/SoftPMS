@@ -20,7 +20,7 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 
         builder.Property(a => a.RecordId)
             .IsRequired()
-            .HasMaxLength(50);
+            .HasMaxLength(256);
 
         builder.Property(a => a.Action)
             .IsRequired()
