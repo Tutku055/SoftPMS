@@ -1,8 +1,8 @@
 import { apiClient } from '../../../config/apiClient';
-import type { EmployeeDto, PaginatedList, CreateEmployeeDto } from '../types';
+import type { EmployeeDto, PaginatedList, CreateEmployeeDto, GetEmployeesParams } from '../types';
 
-export const getEmployees = async (page = 1, pageSize = 20): Promise<PaginatedList<EmployeeDto>> => {
-  const { data } = await apiClient.get<PaginatedList<EmployeeDto>>(`/Employees?pageNumber=${page}&pageSize=${pageSize}`);
+export const getEmployees = async (params: GetEmployeesParams): Promise<PaginatedList<EmployeeDto>> => {
+  const { data } = await apiClient.post<PaginatedList<EmployeeDto>>('/Employees/search', params);
   return data;
 };
 

@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using SoftlarePMS.Application;
 using SoftlarePMS.Infrastructure;
+using SoftlarePMS.Infrastructure.Persistence;
 using SoftlarePMS.Persistence;
 using SoftlarePMS.WebApi.Middleware;
 using SoftlarePMS.WebApi.OpenApi;
@@ -128,5 +129,12 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var initialiser = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitialiser>();
+    await initialiser.SeedAsync();
+}
+
 
 app.Run();

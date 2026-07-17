@@ -1,6 +1,7 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SoftlarePMS.Application.Common.Interfaces;
+using SoftlarePMS.Infrastructure.Persistence;
 using SoftlarePMS.Persistence.Context;
 using SoftlarePMS.Persistence.Interceptors;
 
@@ -14,6 +15,11 @@ public static class PersistenceServiceRegistration
     {
         // Register the audit interceptor as a scoped service so it can resolve
         // ICurrentUserService (which is also scoped — tied to the HTTP request)
+
+        //Fake Employee for testing purpose
+        services.AddScoped<ApplicationDbContextInitialiser>();
+
+
         services.AddScoped<AuditSaveChangesInterceptor>();
 
         services.AddDbContext<SoftlarePMSDbContext>((provider, options) =>

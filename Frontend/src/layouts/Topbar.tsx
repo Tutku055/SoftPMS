@@ -21,7 +21,7 @@ export const Topbar: React.FC = () => {
   const isDarkMode = mode === 'dark';
 
   const currentUser = useAuthStore((state) => state.currentUser);
-  const displayName = currentUser?.username || currentUser?.email || 'User';
+  const displayName = currentUser?.username || 'User';
 
   return (
     <AppBar

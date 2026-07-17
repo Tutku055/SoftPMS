@@ -3,10 +3,10 @@ import { useAuthStore } from '../store/useAuthStore';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { Login } from '../features/auth/components/Login/Login';
 
-const EmployeesList = () => <div>EmployeesList</div>;
+import { ActiveRoster } from '../features/employees/ActiveRoster';
+
 const RolesList = () => <div>RolesList</div>;
 const UsersList = () => <div>UsersList</div>;
-
 
 const PrivateRoute = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -32,11 +32,15 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Navigate to="/employees" replace />
+            element: <Navigate to="/dashboard" replace />
           },
           {
-            path: 'employees',
-            element: <EmployeesList />,
+            path: 'dashboard',
+            element: <div>Dashboard</div>
+          },
+          {
+            path: 'employees/active',
+            element: <ActiveRoster />,
           },
           {
             path: 'roles',

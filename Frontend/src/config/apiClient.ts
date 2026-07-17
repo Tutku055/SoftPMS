@@ -44,9 +44,54 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
+      // Rehydrate store to get latest tokens from localStorage (in case another tab refreshed)
+      try {
+        useAuthStore.persist.rehydrate();
+      } catch (e) {
+        console.error('Failed to rehydrate auth store', e);
+      }
+
+      const currentStore = useAuthStore.getState();
+      const authHeader = originalRequest.headers.Authorization || originalRequest.headers.authorization;
+      const failedToken = authHeader ? authHeader.toString().replace('Bearer ', '') : currentStore.accessToken;
+
+      // If the token in the store is already different from the one that failed,
+      // it means another tab has already refreshed the token.
+      if (currentStore.accessToken && currentStore.accessToken !== failedToken) {
+        originalRequest.headers.Authorization = `Bearer ${currentStore.accessToken}`;
+        return apiClient(originalRequest);
+      }
+
+      // Check if another tab is currently refreshing
+      const refreshInProgressVal = localStorage.getItem('auth_refresh_in_progress');
+      const isRefreshingOtherTab = refreshInProgressVal && (Date.now() - parseInt(refreshInProgressVal, 10) < 8000); // 8 seconds timeout
+
+      if (isRefreshingOtherTab || isRefreshing) {
         return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
+
+          if (isRefreshingOtherTab && !isRefreshing) {
+            const checkInterval = setInterval(() => {
+              try {
+                useAuthStore.persist.rehydrate();
+              } catch (e) {}
+              const updatedStore = useAuthStore.getState();
+              const refreshActive = localStorage.getItem('auth_refresh_in_progress');
+
+              if (updatedStore.accessToken && updatedStore.accessToken !== failedToken) {
+                clearInterval(checkInterval);
+                resolve(updatedStore.accessToken);
+              } else if (!refreshActive) {
+                clearInterval(checkInterval);
+                reject(error);
+              }
+            }, 200);
+
+            setTimeout(() => {
+              clearInterval(checkInterval);
+              reject(error);
+            }, 8000);
+          }
         })
           .then((token) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
@@ -59,10 +104,12 @@ apiClient.interceptors.response.use(
 
       originalRequest._retry = true;
       isRefreshing = true;
+      localStorage.setItem('auth_refresh_in_progress', Date.now().toString());
 
       const { accessToken, refreshToken } = useAuthStore.getState();
 
       if (!accessToken || !refreshToken) {
+        localStorage.removeItem('auth_refresh_in_progress');
         useAuthStore.getState().logout();
         window.location.href = '/login';
         return Promise.reject(error);
@@ -74,15 +121,15 @@ apiClient.interceptors.response.use(
           refreshToken,
         });
 
-        // Update Zustand store
         useAuthStore.getState().login(data.accessToken, data.refreshToken);
 
+        localStorage.removeItem('auth_refresh_in_progress');
         processQueue(null, data.accessToken);
         
-        // Retry the original request
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
+        localStorage.removeItem('auth_refresh_in_progress');
         processQueue(refreshError, null);
         useAuthStore.getState().logout();
         window.location.href = '/login';

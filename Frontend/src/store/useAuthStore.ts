@@ -5,6 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 interface DecodedToken {
   sub?: string;
   email?: string;
+  username?: string;
   permissions?: string | string[];
   exp?: number;
   [key: string]: any;
@@ -48,7 +49,7 @@ export const useAuthStore = create<AuthState>()(
           }
 
           const userEmail = userData?.email || decoded.email || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || '';
-          const userName = userData?.username || '';
+          const userName = userData?.username || decoded.username || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || '';
 
           set({
             accessToken,

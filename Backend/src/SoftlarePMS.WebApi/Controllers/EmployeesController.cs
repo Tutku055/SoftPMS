@@ -16,21 +16,14 @@ namespace SoftlarePMS.WebApi.Controllers;
 public sealed class EmployeesController : ApiControllerBase
 {
     /// <summary>Get a paginated, filtered list of employees.</summary>
-    [HttpGet]
+    /// <summary>Get a paginated, dynamically filtered list of employees.</summary>
+    [HttpPost("search")]
     [HasPermission("Employees.Read")]
     [ProducesResponseType(typeof(PaginatedList<EmployeeDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20,
-        [FromQuery] string? city = null,
-        [FromQuery] string? profession = null,
-        [FromQuery] EmploymentStatus? employmentStatus = null,
-        [FromQuery] decimal? minRate = null,
-        [FromQuery] decimal? maxRate = null,
+    public async Task<IActionResult> Search(
+        [FromBody] GetEmployeesWithPaginationQuery query,
         CancellationToken ct = default)
     {
-        var query = new GetEmployeesWithPaginationQuery(
-            pageNumber, pageSize, city, profession, employmentStatus, minRate, maxRate);
         return Ok(await Sender.Send(query, ct));
     }
 
