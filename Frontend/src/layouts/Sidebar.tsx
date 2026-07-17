@@ -1,18 +1,179 @@
-import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Box, Typography } from '@mui/material';
-import { People, VerifiedUser, AdminPanelSettings } from '@mui/icons-material';
+import React, { useState } from 'react';
+import type { ReactNode } from 'react';
+import { 
+  Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, 
+  Toolbar, Box, Typography, Collapse
+} from '@mui/material';
+import { 
+  Dashboard, PeopleAlt, FolderCopy, AccountBalance, 
+  Psychology, Settings, ExpandLess, ExpandMore 
+} from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
+import styles from './Sidebar.module.css';
+import logoImg from '../assets/images/SoftPMSLogo.png';
 
-const drawerWidth = 240;
+// --- TypeScript Arayüzleri (Interfaces) ---
 
-export const Sidebar = () => {
+interface SubMenuItem {
+  title: string;
+  path: string;
+}
+
+interface MenuItem {
+  title: string;
+  path?: string; // Ana menüde direkt link varsa
+  icon: ReactNode;
+  children?: SubMenuItem[]; // Alt menüsü olanlar için
+}
+
+// -----------------------------------------
+
+const drawerWidth = 280;
+
+// Menü Hiyerarşisi
+const menuConfig: MenuItem[] = [
+  { 
+    title: 'Dashboard', 
+    path: '/dashboard', 
+    icon: <Dashboard /> 
+  },
+  { 
+    title: 'Personnel Operations', 
+    icon: <PeopleAlt />,
+    children: [
+      { title: 'Active Roster', path: '/employees/active' },
+      { title: 'Time & Attendance', path: '/employees/time-tracking' },
+      { title: 'Notes & References', path: '/employees/notes' }
+    ]
+  },
+  { 
+    title: 'Documents & Records', 
+    icon: <FolderCopy />,
+    children: [
+      { title: 'Document Archive', path: '/documents/archive' },
+      { title: 'Process Tracking', path: '/documents/tracking' }
+    ]
+  },
+  { 
+    title: 'Financial Management', 
+    icon: <AccountBalance />,
+    children: [
+      { title: 'Salary & Pay Grade', path: '/finance/salary' },
+      { title: 'Cost Analysis', path: '/finance/analytics' }
+    ]
+  },
+  { 
+    title: 'AI Analytics & Prediction', 
+    icon: <Psychology />,
+    children: [
+      { title: 'Anomaly Analysis (ML)', path: '/ai/anomaly' },
+      { title: 'Turnover Risk', path: '/ai/turnover-risk' }
+    ]
+  },
+  { 
+    title: 'System Settings', 
+    icon: <Settings />,
+    children: [
+      { title: 'Users', path: '/settings/users' },
+      { title: 'Roles & Permissions', path: '/settings/roles' }
+    ]
+  }
+];
+
+export const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Alt menülerin açık/kapalı state'ini tutan obje (Type: Record<string, boolean>)
+  const [openStates, setOpenStates] = useState<Record<string, boolean>>({});
 
-  const menuItems = [
-    { title: 'Employees', path: '/employees', icon: <People /> },
-    { title: 'Roles', path: '/roles', icon: <VerifiedUser /> },
-    { title: 'Users', path: '/users', icon: <AdminPanelSettings /> },
-  ];
+  const handleToggle = (title: string) => {
+    setOpenStates((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  const renderMenuItem = (item: MenuItem) => {
+    const hasChildren = item.children && item.children.length > 0;
+    
+    // Alt menüsü yoksa ve path eşleşiyorsa ana menü aktiftir
+    const isActive = !hasChildren && item.path && location.pathname.startsWith(item.path);
+    
+    // Alt menülerden biri aktifse, ana menünün açık kalması vb. mantıklar eklenebilir
+    const isOpen = openStates[item.title];
+
+    return (
+      <React.Fragment key={item.title}>
+        <ListItem disablePadding sx={{ display: 'block' }}>
+          <ListItemButton
+            onClick={() => {
+              if (hasChildren) {
+                handleToggle(item.title);
+              } else if (item.path) {
+                navigate(item.path);
+              }
+            }}
+            className={`${styles.menuItem} ${isActive ? styles.activeItem : ''}`}
+            sx={{ minHeight: 48, px: 2.5 }}
+          >
+            <ListItemIcon 
+              sx={{ 
+                minWidth: 40, 
+                color: isActive ? 'primary.main' : 'text.secondary' 
+              }}
+            >
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText 
+              primary={
+                <Typography 
+                  sx={{ 
+                    fontSize: '0.95rem', 
+                    fontWeight: isActive ? 600 : 500,
+                    color: isActive ? 'primary.main' : 'text.primary',
+                    transition: 'color 0.3s ease'
+                  }}
+                >
+                  {item.title}
+                </Typography>
+              }
+            />
+            {hasChildren && (isOpen ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />)}
+          </ListItemButton>
+        </ListItem>
+
+        {hasChildren && item.children && (
+          <Collapse in={isOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              {item.children.map((child) => {
+                const isChildActive = location.pathname === child.path;
+                return (
+                  <ListItemButton
+                    key={child.title}
+                    onClick={() => navigate(child.path)}
+                    className={`${styles.menuItem} ${styles.subMenuItem} ${isChildActive ? styles.activeSubItem : ''}`}
+                  >
+                    <ListItemText 
+                      primary={
+                        <Typography 
+                          sx={{ 
+                            fontSize: '0.85rem',
+                            fontWeight: isChildActive ? 600 : 400,
+                            color: isChildActive ? 'primary.main' : 'text.secondary',
+                            transition: 'color 0.3s ease'
+                          }}
+                        >
+                          {child.title}
+                        </Typography>
+                      }
+                    />
+                  </ListItemButton>
+                );
+              })}
+            </List>
+          </Collapse>
+        )}
+      </React.Fragment>
+    );
+  };
 
   return (
     <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
@@ -23,47 +184,41 @@ export const Sidebar = () => {
           '& .MuiDrawer-paper': { 
             boxSizing: 'border-box', 
             width: drawerWidth,
-            backgroundColor: (theme) => theme.palette.background.paper,
-            borderRight: (theme) => `1px solid ${theme.palette.divider}`
+            borderRight: (theme) => `1px solid ${theme.palette.divider}`,
+            backgroundColor: (theme) => theme.palette.background.paper, 
+            backgroundImage: 'none', 
+            borderRadius: 0, 
+            boxShadow: (theme) => theme.palette.mode === 'dark' ? '4px 0 24px rgba(0,0,0,0.2)' : 'none',
+            transition: 'background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
           },
         }}
         open
       >
-        <Toolbar>
-          <Typography variant="h5" color="primary" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
-            Softlare
-          </Typography>
-        </Toolbar>
-        <List sx={{ px: 2 }}>
-          {menuItems.map((item) => (
-            <ListItem key={item.title} disablePadding sx={{ mb: 1 }}>
-              <ListItemButton
-                selected={location.pathname.startsWith(item.path)}
-                onClick={() => navigate(item.path)}
-                sx={{
-                  borderRadius: 2,
-                  '&.Mui-selected': {
-                    backgroundColor: (theme) => theme.palette.mode === 'light' 
-                      ? theme.palette.primary.light + '20' 
-                      : theme.palette.primary.dark + '40',
-                    color: (theme) => theme.palette.primary.main,
-                    '& .MuiListItemIcon-root': {
-                      color: (theme) => theme.palette.primary.main,
-                    }
-                  }
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 40, color: 'text.secondary' }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText 
-                  primary={item.title} 
-                  sx={{ '& .MuiListItemText-primary': { fontWeight: 500 } }}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+        <div className={styles.sidebarContainer}>
+          <Toolbar sx={{ mb: 2, mt: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <img 
+                src={logoImg} 
+                alt="SoftPMS Logo" 
+                style={{ 
+                  width: 36, 
+                  height: 36, 
+                  objectFit: 'contain', 
+                  borderRadius: 6 
+                }} 
+              />
+              <Typography variant="h6" color="text.primary" sx={{ fontWeight: 800, letterSpacing: '-0.5px' }}>
+                SoftPMS
+              </Typography>
+            </Box>
+          </Toolbar>
+
+          <Box sx={{ overflowY: 'auto', overflowX: 'hidden', px: 1, pb: 4 }}>
+            <List>
+              {menuConfig.map((item) => renderMenuItem(item))}
+            </List>
+          </Box>
+        </div>
       </Drawer>
     </Box>
   );

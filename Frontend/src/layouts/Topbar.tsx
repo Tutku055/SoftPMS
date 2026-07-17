@@ -1,12 +1,14 @@
-import { AppBar, Toolbar, Typography, IconButton, Box, Button } from '@mui/material';
+import React from 'react';
+import { AppBar, Toolbar, Typography, IconButton, Box, Button, Divider } from '@mui/material';
 import { DarkMode, LightMode, Logout, Person } from '@mui/icons-material';
 import { useThemeStore } from '../store/useThemeStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
+import styles from './Topbar.module.css';
 
-const drawerWidth = 240;
+const drawerWidth = 280;
 
-export const Topbar = () => {
+export const Topbar: React.FC = () => {
   const { mode, toggleTheme } = useThemeStore();
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
@@ -16,38 +18,85 @@ export const Topbar = () => {
     navigate('/login');
   };
 
+  const isDarkMode = mode === 'dark';
+
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const displayName = currentUser?.username || currentUser?.email || 'User';
+
   return (
     <AppBar
       position="fixed"
       elevation={0}
+      className={styles.appBar}
       sx={{
         width: { sm: `calc(100% - ${drawerWidth}px)` },
         ml: { sm: `${drawerWidth}px` },
-        backgroundColor: (theme) => theme.palette.background.paper,
-        color: (theme) => theme.palette.text.primary,
+        backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(31, 41, 55, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+        backdropFilter: 'blur(8px)',
+        color: 'text.primary',
         borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+        borderRadius: 0,
+        transition: 'background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
-          SoftlarePMS Panel
-        </Typography>
+      <Toolbar sx={{ minHeight: '70px !important' }}>
+        <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          <Typography 
+            variant="h6" 
+            noWrap 
+            component="div" 
+            sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}
+          >
+            SoftPMS Dashboard
+          </Typography>
+        </Box>
         
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton onClick={toggleTheme} color="inherit">
-            {mode === 'dark' ? <LightMode /> : <DarkMode />}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <IconButton 
+            onClick={toggleTheme} 
+            color="inherit"
+            className={styles.iconButton}
+            title={isDarkMode ? "Light Mode" : "Dark Mode"}
+          >
+            {isDarkMode ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
           </IconButton>
           
+          <Divider 
+            orientation="vertical" 
+            flexItem 
+            sx={{ 
+              my: 2, 
+              borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' 
+            }} 
+          />
+
           <Button
             color="inherit"
             startIcon={<Person />}
+            className={styles.profileButton}
             sx={{ display: { xs: 'none', sm: 'flex' } }}
           >
-            Profile
+            <Box 
+              component="span" 
+              sx={{ 
+                maxWidth: '120px',
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap',
+                display: 'inline-block'
+              }}
+            >
+              {displayName}
+            </Box>
           </Button>
 
-          <IconButton color="inherit" onClick={handleLogout} title="Logout">
-            <Logout />
+          <IconButton 
+            color="inherit" 
+            onClick={handleLogout} 
+            title="Logout"
+            className={`${styles.iconButton} ${styles.logoutButton}`}
+          >
+            <Logout fontSize="small" />
           </IconButton>
         </Box>
       </Toolbar>

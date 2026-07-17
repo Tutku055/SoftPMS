@@ -1,0 +1,279 @@
+/* src/features/auth/components/Login/Login.module.css */
+
+/* Animations */
+@keyframes bgPan {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Global Wrapper - Background image will be set inline in TSX */
+.wrapper {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: 'Inter', 'Roboto', sans-serif;
+  transition: all 0.4s ease;
+}
+
+.wrapperLight {
+  background-color: #f4f4f5;
+}
+
+.wrapperDark {
+  background-color: #000000;
+}
+
+/* Main Card - Glassmorphism Effect */
+.authCard {
+  display: flex;
+  width: 100%;
+  max-width: 950px;
+  min-height: 550px;
+  border-radius: 16px; /* Soft corners for glassmorphism */
+  overflow: hidden;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  animation: floatUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: all 0.4s ease;
+}
+
+.wrapperLight .authCard {
+  background-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.wrapperDark .authCard {
+  background-color: rgba(15, 23, 42, 0.55);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Left Side - Form Area */
+.formSection {
+  flex: 1;
+  padding: 3rem 4rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 3rem;
+  letter-spacing: -0.5px;
+}
+
+.brandLogo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+  /* subtle glow effect for the logo if desired */
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s ease;
+}
+
+.brandLogo:hover {
+  transform: scale(1.05);
+}
+
+.formWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.headerText {
+  font-size: 1.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.03em;
+}
+
+.wrapperLight .headerText {
+  color: #09090b;
+}
+
+.wrapperDark .headerText {
+  color: #fafafa;
+}
+
+.subHeaderText {
+  font-size: 0.95rem;
+  margin-bottom: 2.5rem;
+}
+
+.wrapperLight .subHeaderText {
+  color: #71717a;
+}
+
+.wrapperDark .subHeaderText {
+  color: #a1a1aa;
+}
+
+/* Right Side - Visual Area */
+.visualSection {
+  flex: 1.2;
+  position: relative;
+  padding: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Translucent color transitions to keep the glassy texture */
+.wrapperLight .visualSection {
+  background: linear-gradient(135deg, rgba(199, 210, 254, 0.3) 0%, rgba(233, 213, 255, 0.3) 100%);
+  border-left: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.wrapperDark .visualSection {
+  background: linear-gradient(135deg, rgba(49, 46, 129, 0.3) 0%, rgba(30, 27, 75, 0.3) 100%);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.visualContent {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 400px;
+}
+
+.textContent {
+  transform: translateY(10px);
+  animation: floatUp 1s ease-out forwards;
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.premiumTitle {
+  font-size: 2.25rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 4px 20px rgba(165, 180, 252, 0.3);
+}
+
+.wrapperLight .premiumTitle {
+  background: linear-gradient(135deg, #111827 0%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+
+.featureList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.featureItem {
+  font-size: 1.15rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  letter-spacing: 0.01em;
+}
+
+.wrapperLight .featureItem {
+  color: #3f3f46;
+}
+
+.wrapperDark .featureItem {
+  color: #d4d4d8;
+}
+
+.featureIcon {
+  font-size: 1.4rem !important;
+}
+
+.wrapperLight .featureIcon {
+  color: #4f46e5;
+}
+
+.wrapperDark .featureIcon {
+  color: #a5b4fc;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .authCard {
+    max-width: 850px;
+    min-height: 500px;
+  }
+  .formSection {
+    padding: 2.5rem 3rem;
+  }
+  .visualSection {
+    padding: 2.5rem;
+  }
+  .premiumTitle {
+    font-size: 1.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .authCard {
+    max-width: 480px;
+    min-height: 480px;
+    flex-direction: column;
+  }
+  .visualSection {
+    display: none;
+  }
+  .formSection {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    padding: 1rem;
+  }
+  .authCard {
+    max-width: 100%;
+    min-height: 420px;
+    border-radius: 12px;
+  }
+  .formSection {
+    padding: 1.5rem;
+  }
+  .brand {
+    margin-bottom: 2rem;
+  }
+  .brandLogo {
+    width: 36px;
+    height: 36px;
+  }
+  .headerText {
+    font-size: 1.5rem;
+  }
+  .subHeaderText {
+    margin-bottom: 1.5rem;
+  }
+}

@@ -11,7 +11,7 @@ export const useLogin = () => {
   return useMutation<LoginResponse, Error, LoginCredentials>({
     mutationFn: login,
     onSuccess: (data) => {
-      loginAction(data.accessToken, data.refreshToken);
+      loginAction(data.accessToken, data.refreshToken, { username: data.username, email: data.email });
       navigate('/');
     },
   });

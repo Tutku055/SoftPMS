@@ -1,10 +1,12 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { DashboardLayout } from '../layouts/DashboardLayout';
-import { Login } from '../features/auth/Login';
-import { EmployeesList } from '../features/employees/EmployeesList';
-import { RolesList } from '../features/roles/RolesList';
-import { UsersList } from '../features/users/UsersList';
+import { Login } from '../features/auth/components/Login/Login';
+
+const EmployeesList = () => <div>EmployeesList</div>;
+const RolesList = () => <div>RolesList</div>;
+const UsersList = () => <div>UsersList</div>;
+
 
 const PrivateRoute = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

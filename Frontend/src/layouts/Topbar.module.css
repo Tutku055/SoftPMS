@@ -1,0 +1,53 @@
+/* Topbar.module.css */
+.appBar {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Base IconButton & Button Hover Animations */
+.iconButton, .profileButton {
+  border-radius: 12px !important;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  border: 1px solid transparent !important;
+}
+
+.iconButton:hover, .profileButton:hover {
+  transform: translateY(-2px);
+}
+
+.profileButton {
+  padding: 6px 16px !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+}
+
+/* Dark Theme States */
+:global([data-theme="dark"]) .iconButton:hover, 
+:global([data-theme="dark"]) .profileButton:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 8px rgba(138, 180, 248, 0.05);
+}
+
+/* Light Theme States */
+:global([data-theme="light"]) .iconButton:hover,
+:global([data-theme="light"]) .profileButton:hover {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Özel Logout Butonu Stili */
+.logoutButton {
+  color: #ef5350 !important; /* Kırmızı tonu */
+}
+
+:global([data-theme="dark"]) .logoutButton:hover {
+  background: rgba(239, 83, 80, 0.1) !important;
+  border-color: rgba(239, 83, 80, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(239, 83, 80, 0.15);
+}
+
+:global([data-theme="light"]) .logoutButton:hover {
+  background: rgba(211, 47, 47, 0.08) !important;
+  border-color: rgba(211, 47, 47, 0.15) !important;
+}

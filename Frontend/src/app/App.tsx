@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import { useThemeStore } from '../store/useThemeStore';
 import { getTheme } from '../theme';
+import { useEffect } from 'react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,6 +19,10 @@ export const App = () => {
   const themeMode = useThemeStore((state) => state.mode);
   const theme = getTheme(themeMode);
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', themeMode);
+  }, [themeMode]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
@@ -26,7 +31,8 @@ export const App = () => {
           styles={{
             body: {
               backgroundColor: theme.palette.background.default,
-              transition: 'background-color 0.3s ease',
+              color: theme.palette.text.primary,
+              transition: 'background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
             },
           }}
         />

@@ -1,0 +1,67 @@
+/* Sidebar.module.css */
+.sidebarContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Base Menu Item */
+.menuItem {
+  border-radius: 8px !important;
+  margin: 4px 12px !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  border: 1px solid transparent !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover Effects - Translate and Shadow */
+.menuItem:hover {
+  transform: translateX(6px);
+}
+
+/* Dark Theme specific hovers and active states */
+:global([data-theme="dark"]) .menuItem:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), 0 0 10px rgba(138, 180, 248, 0.05);
+}
+
+:global([data-theme="dark"]) .activeItem {
+  background: linear-gradient(90deg, rgba(144, 202, 249, 0.15) 0%, rgba(144, 202, 249, 0.02) 100%) !important;
+  border-left: 4px solid #90caf9 !important;
+  border-radius: 4px 8px 8px 4px !important;
+}
+
+/* Light Theme specific hovers and active states */
+:global([data-theme="light"]) .menuItem:hover {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+:global([data-theme="light"]) .activeItem {
+  background: linear-gradient(90deg, rgba(33, 150, 243, 0.12) 0%, rgba(33, 150, 243, 0.02) 100%) !important;
+  border-left: 4px solid #1976d2 !important;
+  border-radius: 4px 8px 8px 4px !important;
+}
+
+/* Submenu specifics */
+.subMenuItem {
+  margin: 2px 12px 2px 32px !important; /* Indented for hierarchy */
+  border-radius: 6px !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.subMenuItem:hover {
+  transform: translateX(4px);
+}
+
+:global([data-theme="dark"]) .activeSubItem {
+  color: #90caf9 !important;
+  font-weight: 600 !important;
+}
+
+:global([data-theme="light"]) .activeSubItem {
+  color: #1976d2 !important;
+  font-weight: 600 !important;
+}
