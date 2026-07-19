@@ -42,6 +42,7 @@ public sealed class CreateEmployeeCommandHandler(
             HireDate          = request.HireDate,
             WorkingHoursPerWeek = request.WorkingHoursPerWeek,
             VacationDaysTotal = request.VacationDaysTotal,
+            DepartmentId      = request.DepartmentId,
             CreatedByUserId   = actorId,
             CreatedAt         = now,
             IsDeleted         = false

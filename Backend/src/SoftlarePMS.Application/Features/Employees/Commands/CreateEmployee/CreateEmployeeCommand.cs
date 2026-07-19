@@ -31,5 +31,8 @@ public sealed record CreateEmployeeCommand(
     // --- Initial compensation (Stundenlohn or monthly) ---
     decimal BaseSalary,
     SalaryType SalaryType,
-    string PayGrade
+    string PayGrade,
+
+    // --- Department ---
+    Guid? DepartmentId
 ) : IRequest<CreatedEmployeeDto>;

@@ -1,0 +1,124 @@
+/* EmployeeCreation.module.css */
+
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.pageTitle {
+  font-weight: 700 !important; 
+  letter-spacing: -0.02em !important;
+  color: var(--mui-palette-text-primary);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.glassPanel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
+  transition: box-shadow 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .glassPanel {
+    background: rgba(24, 24, 24, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.sectionTitle {
+  font-weight: 600 !important;
+  color: var(--mui-palette-text-primary);
+  margin-bottom: 16px !important;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* Base input properties from Roster.module.css */
+.premiumInput :global(.MuiOutlinedInput-root) {
+  border-radius: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Required fields: slightly darker, e.g. using background-default or semi-dark tone */
+.requiredInput :global(.MuiOutlinedInput-root) {
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .requiredInput :global(.MuiOutlinedInput-root) {
+    background: rgba(0, 0, 0, 0.45) !important;
+  }
+}
+
+/* Optional fields: lighter, e.g. using background-paper */
+.optionalInput :global(.MuiOutlinedInput-root) {
+  background: var(--mui-palette-background-paper) !important;
+  opacity: 0.9;
+}
+
+@media (prefers-color-scheme: dark) {
+  .optionalInput :global(.MuiOutlinedInput-root) {
+    background: rgba(255, 255, 255, 0.03) !important;
+  }
+}
+
+/* Focus styles matching Roster */
+.premiumInput :global(.MuiOutlinedInput-root:hover) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  .premiumInput :global(.MuiOutlinedInput-root:hover) {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.premiumInput :global(.MuiOutlinedInput-notchedOutline) {
+  border-color: rgba(128, 128, 128, 0.2) !important;
+}
+
+.premiumInput :global(.Mui-focused .MuiOutlinedInput-notchedOutline) {
+  border-color: var(--mui-palette-primary-main) !important;
+  border-width: 1px !important;
+}
+
+.premiumInput :global(.Mui-focused.MuiOutlinedInput-root) {
+  box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.1);
+}
+
+.actionButton {
+  border-radius: 10px !important;
+  border-color: rgba(128, 128, 128, 0.25) !important;
+  color: var(--mui-palette-text-primary) !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  background: transparent !important;
+  transition: all 0.2s ease !important;
+}
+
+.actionButton:hover {
+  background: rgba(128, 128, 128, 0.06) !important;
+  border-color: rgba(128, 128, 128, 0.5) !important;
+}
+
+.submitButton {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  padding: 10px 24px !important;
+}

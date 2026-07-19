@@ -35,9 +35,32 @@ export interface EmployeeDto {
 }
 
 export interface CreateEmployeeDto {
+  employeeNo: string;
   firstName: string;
   lastName: string;
-  email: string;
+  gender: number;
+  dateOfBirth: string;
+  nationality: string;
+  profession: string;
+  employmentStatus: number;
+  hireDate: string;
+  workingHoursPerWeek: number;
+  vacationDaysTotal: number;
+  departmentId?: string;
+  addressLine: string;
+  postalCode: string;
+  city: string;
+  state: string;
+  country: string;
+  baseSalary: number;
+  salaryType: number;
+  payGrade: string;
+}
+
+export interface CreatedEmployeeDto {
+  id: string;
+  employeeNo: string;
+  hireDate: string;
 }
 
 export interface FilterCriteria {
