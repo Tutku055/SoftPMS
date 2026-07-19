@@ -41,7 +41,9 @@ public class ApplicationMappingProfile : Profile
             .ForMember(d => d.Employee, o => o.Ignore());
 
         // Department mappings
-        CreateMap<Department, DepartmentDto>().ReverseMap();
+        CreateMap<Department, DepartmentDto>()
+            .ForCtorParam("EmployeeCount", o => o.MapFrom(s => s.Employees.Count));
+        CreateMap<Department, DepartmentLookupDto>();
 
         // Employee compensation mappings
         CreateMap<EmployeeCompensation, EmployeeCompensationDto>()

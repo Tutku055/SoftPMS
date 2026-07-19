@@ -11,6 +11,7 @@ export interface DepartmentDto {
   id: string;
   name: string;
   description: string;
+  employeeCount?: number;
 }
 
 export interface EmployeeDto {

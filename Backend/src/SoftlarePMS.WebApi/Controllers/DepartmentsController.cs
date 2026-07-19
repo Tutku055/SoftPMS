@@ -7,6 +7,7 @@ using SoftlarePMS.Application.Features.Departments.Commands.DeleteDepartment;
 using SoftlarePMS.Application.Features.Departments.Commands.UpdateDepartment;
 using SoftlarePMS.Application.Features.Departments.Queries.GetDepartmentById;
 using SoftlarePMS.Application.Features.Departments.Queries.GetDepartmentsWithPagination;
+using SoftlarePMS.Application.Features.Departments.Queries.GetDepartmentsLookup;
 using SoftlarePMS.WebApi.Authorization;
 
 namespace SoftlarePMS.WebApi.Controllers;
@@ -19,6 +20,24 @@ public sealed class DepartmentsController : ApiControllerBase
     [HasPermission("Departments.Read")]
     [ProducesResponseType(typeof(PaginatedList<DepartmentDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Get([FromQuery] GetDepartmentsWithPaginationQuery query, CancellationToken ct)
+    {
+        return Ok(await Sender.Send(query, ct));
+    }
+
+    /// <summary>Get a lookup list of departments.</summary>
+    [HttpGet("lookup")]
+    [HasPermission("Departments.Read")]
+    [ProducesResponseType(typeof(List<DepartmentLookupDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetLookup(CancellationToken ct)
+    {
+        return Ok(await Sender.Send(new GetDepartmentsLookupQuery(), ct));
+    }
+
+    /// <summary>Get a paginated, filtered list of departments.</summary>
+    [HttpPost("search")]
+    [HasPermission("Departments.Read")]
+    [ProducesResponseType(typeof(PaginatedList<DepartmentDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Search([FromBody] GetDepartmentsWithPaginationQuery query, CancellationToken ct)
     {
         return Ok(await Sender.Send(query, ct));
     }

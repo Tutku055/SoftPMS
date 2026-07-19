@@ -18,8 +18,9 @@ public sealed class GetDepartmentByIdQueryHandler(
     {
         var department = await context.Departments
             .AsNoTracking()
+            .Where(d => d.Id == request.Id)
             .ProjectTo<DepartmentDto>(mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync(d => d.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (department is null)
         {

@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { 
   Dashboard, PeopleAlt, FolderCopy, AccountBalance, 
-  Psychology, Settings, ExpandLess, ExpandMore 
+  Psychology, Settings, ExpandLess, ExpandMore, Business 
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './Sidebar.module.css';
@@ -44,6 +44,14 @@ const menuConfig: MenuItem[] = [
       { title: 'Roster', path: '/employees/roster' },
       { title: 'Time & Attendance', path: '/employees/time-tracking' },
       { title: 'Notes & References', path: '/employees/notes' }
+    ]
+  },
+  { 
+    title: 'Departments', 
+    icon: <Business />,
+    children: [
+      { title: 'Department List', path: '/departments/list' },
+      { title: 'Department Employees', path: '/departments/employees' }
     ]
   },
   { 

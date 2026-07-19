@@ -10,7 +10,7 @@ import type {
 import { Box, Stack, TextField, MenuItem, Typography } from '@mui/material';
 
 export type CustomFilterValue = { value: string; operator: string };
-export type FilterType = 'text' | 'date' | 'select' | 'multi-select';
+export type FilterType = 'text' | 'date' | 'select' | 'multi-select' | 'number';
 
 export type DataTableColumnDef = Omit<GridColDef, 'renderHeader'> & {
   filterType?: FilterType;
@@ -43,6 +43,12 @@ const DATE_OPERATORS = [
   { value: 'is', label: 'Is' },
   { value: 'after', label: 'After' },
   { value: 'before', label: 'Before' },
+];
+
+const NUMBER_OPERATORS = [
+  { value: 'is', label: 'Is' },
+  { value: 'morethan', label: 'More than' },
+  { value: 'lessthan', label: 'Less than' },
 ];
 
 const SELECT_OPERATORS = [
@@ -104,7 +110,14 @@ const renderHeaderWithFilter = (
     const filterState = customFilters[field] || { value: '', operator: filterType === 'text' ? 'contains' : filterType === 'multi-select' ? 'in' : 'is' };
     const { value, operator } = filterState;
 
-    const opList = filterType === 'text' ? STRING_OPERATORS : filterType === 'date' ? DATE_OPERATORS : filterType === 'multi-select' ? MULTI_SELECT_OPERATORS : SELECT_OPERATORS;
+    const getOpList = () => {
+      if (filterType === 'date') return DATE_OPERATORS;
+      if (filterType === 'select') return SELECT_OPERATORS;
+      if (filterType === 'multi-select') return MULTI_SELECT_OPERATORS;
+      if (filterType === 'number') return NUMBER_OPERATORS;
+      return STRING_OPERATORS;
+    };
+    const opList = getOpList();
 
     return (
       <Stack spacing={0.5} sx={{ width: '100%', pt: 1, pb: 0.5, height: '100%', justifyContent: 'flex-end' }}>
@@ -212,6 +225,21 @@ const renderHeaderWithFilter = (
             <TextField
               type="date"
               size="small"
+              value={value}
+              onChange={(e) => onCustomFilterChange(field, e.target.value, operator)}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              sx={{
+                flex: 1,
+                ...premiumInputSx,
+                '& input': { py: 0.5, px: 1, fontSize: '0.75rem' }
+              }}
+            />
+          ) : filterType === 'number' ? (
+            <TextField
+              type="number"
+              size="small"
+              placeholder={`Value...`}
               value={value}
               onChange={(e) => onCustomFilterChange(field, e.target.value, operator)}
               onClick={(e) => e.stopPropagation()}

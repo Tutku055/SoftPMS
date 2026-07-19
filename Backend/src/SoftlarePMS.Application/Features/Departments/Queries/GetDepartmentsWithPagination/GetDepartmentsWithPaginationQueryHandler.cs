@@ -4,6 +4,7 @@ using MediatR;
 using SoftlarePMS.Application.Common.Interfaces;
 using SoftlarePMS.Application.Common.Models;
 using SoftlarePMS.Application.DTOs.Department;
+using SoftlarePMS.Application.Common.Extensions;
 
 namespace SoftlarePMS.Application.Features.Departments.Queries.GetDepartmentsWithPagination;
 
@@ -23,6 +24,8 @@ public sealed class GetDepartmentsWithPaginationQueryHandler(
             var search = request.SearchTerm.Trim().ToLower();
             query = query.Where(d => d.Name.ToLower().Contains(search) || d.Description.ToLower().Contains(search));
         }
+
+        query = query.ApplyDynamicFilters(request.Filters);
 
         var projectedQuery = query
             .OrderBy(d => d.Name)
