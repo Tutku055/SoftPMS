@@ -3,9 +3,7 @@ using MediatR;
 namespace SoftlarePMS.Application.Features.Employees.Commands.UpdateEmployeeAddress;
 
 /// <summary>
-/// Command to set a new active address for an employee.
-/// The current active address (EndDate == null) will be closed at NewStartDate - 1 day.
-/// A new address record is inserted with EndDate = null (active).
+/// Command to update an employee's address.
 /// </summary>
 public sealed record UpdateEmployeeAddressCommand(
     Guid EmployeeId,
@@ -14,6 +12,5 @@ public sealed record UpdateEmployeeAddressCommand(
     string City,
     string State,
     string Country,
-    bool IsPrimary,
-    DateTime NewStartDate
+    bool IsPrimary
 ) : IRequest<Unit>;

@@ -5,6 +5,7 @@ using SoftlarePMS.Application.DTOs.Employee;
 using SoftlarePMS.Application.Features.Employees.Commands.CreateEmployee;
 using SoftlarePMS.Application.Features.Employees.Commands.DeleteEmployee;
 using SoftlarePMS.Application.Features.Employees.Commands.UpdateEmployee;
+using SoftlarePMS.Application.Features.Employees.Commands.UpdateEmployeeAddress;
 using SoftlarePMS.Application.Features.Employees.Queries.GetEmployeeById;
 using SoftlarePMS.Application.Features.Employees.Queries.GetEmployeesWithPagination;
 using SoftlarePMS.Domain.Enums;
@@ -17,7 +18,7 @@ public sealed class EmployeesController : ApiControllerBase
 {
     /// <summary>Get a paginated, filtered list of employees.</summary>
     /// <summary>Get a paginated, dynamically filtered list of employees.</summary>
-    [HttpPost("search")]
+    [HttpPost("roster")]
     [HasPermission("Employees.Read")]
     [ProducesResponseType(typeof(PaginatedList<EmployeeDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Search(
@@ -73,6 +74,21 @@ public sealed class EmployeesController : ApiControllerBase
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await Sender.Send(new DeleteEmployeeCommand(id), ct);
+        return NoContent();
+    }
+
+    /// <summary>Update an employee's primary address.</summary>
+    [HttpPut("{id:guid}/addresses/primary")]
+    [HasPermission("Employees.Update")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateAddress(Guid id, [FromBody] UpdateEmployeeAddressCommand command, CancellationToken ct)
+    {
+        if (id != command.EmployeeId)
+            return BadRequest(new { message = "Route id does not match command EmployeeId." });
+
+        await Sender.Send(command, ct);
         return NoContent();
     }
 }

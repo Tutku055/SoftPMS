@@ -24,10 +24,5 @@ public sealed class UpdateEmployeeAddressCommandValidator : AbstractValidator<Up
 
         RuleFor(x => x.PostalCode)
             .MaximumLength(20).WithMessage("Postal code must not exceed 20 characters.");
-
-        RuleFor(x => x.NewStartDate)
-            .NotEmpty().WithMessage("New start date is required.")
-            .LessThanOrEqualTo(DateTime.UtcNow.AddYears(1))
-            .WithMessage("New start date cannot be more than 1 year in the future.");
     }
 }

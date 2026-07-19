@@ -19,6 +19,7 @@ public sealed class GetEmployeeByIdQueryHandler(
     public async Task<EmployeeDetailDto> Handle(GetEmployeeByIdQuery request, CancellationToken cancellationToken)
     {
         var employee = await context.Employees
+            .Include(e => e.Department)
             .Include(e => e.Addresses)
             .Include(e => e.Compensations)
             .Include(e => e.Documents)

@@ -47,7 +47,7 @@ public sealed class CreateEmployeeCommandHandler(
             IsDeleted         = false
         };
 
-        // Initial address — StartDate defaults to HireDate; EndDate is null (active)
+        // Initial address
         var initialAddress = new EmployeeAddress
         {
             Employee    = employee,
@@ -57,8 +57,6 @@ public sealed class CreateEmployeeCommandHandler(
             State       = request.State,
             Country     = request.Country,
             IsPrimary   = true,
-            StartDate   = request.HireDate,
-            EndDate     = null,
             CreatedAt   = now
         };
 

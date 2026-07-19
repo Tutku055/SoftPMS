@@ -28,15 +28,17 @@ import type {
   GridPaginationModel,
   GridColumnVisibilityModel,
 } from '@mui/x-data-grid';
-import { ActiveRosterTable } from './components/ActiveRosterTable';
-import type { CustomFilterValue } from './components/ActiveRosterTable';
+import { useNavigate } from 'react-router-dom';
+import { DataTable } from '../../components/DataTable/DataTable';
+import type { CustomFilterValue, DataTableColumnDef } from '../../components/DataTable/DataTable';
 import { useEmployees } from './hooks/useEmployees';
+import { useDepartments } from './hooks/useDepartments';
 import ExcelJS from 'exceljs';
 
 const COLUMN_NAMES: Record<string, string> = {
   employeeNo: 'Employee No',
-  firstName: 'First Name',
-  lastName: 'Last Name',
+  fullName: 'Full Name',
+  departmentId: 'Department',
   profession: 'Profession',
   employmentStatus: 'Status',
   hireDate: 'Hire Date',
@@ -44,7 +46,7 @@ const COLUMN_NAMES: Record<string, string> = {
 
 type QuickFilter = 'all' | 'active' | 'terminated' | 'new_hires';
 
-export const ActiveRoster = () => {
+export const Roster = () => {
   // ─── QUICK TEXT SEARCH ───────────────────────────────────────────────────
   const [quickSearch, setQuickSearch] = useState('');
   const [debouncedQuickSearch, setDebouncedQuickSearch] = useState('');
@@ -81,8 +83,8 @@ export const ActiveRoster = () => {
   const [columnMenuAnchor, setColumnMenuAnchor] = useState<null | HTMLElement>(null);
   const [columnVisibility, setColumnVisibility] = useState<GridColumnVisibilityModel>({
     employeeNo: true,
-    firstName: true,
-    lastName: true,
+    fullName: true,
+    departmentId: true,
     profession: true,
     employmentStatus: true,
     hireDate: true,
@@ -170,6 +172,9 @@ export const ActiveRoster = () => {
     filters: apiFilters,
   });
 
+  const { data: deptData } = useDepartments();
+  const departmentOptions = deptData?.items.map((d: any) => ({ value: d.id, label: d.name })) || [];
+
   // ─── PREMIUM EXPORT (REAL EXCEL & AUTO-DESIGN) ───────────────────────────
   const handleExport = async () => {
     // NOT: Eğer tüm sayfaları indirmek istersen, backend'indeki useEmployees hook'una 
@@ -182,21 +187,21 @@ export const ActiveRoster = () => {
 
     // 1. Tüm Kolon Konfigürasyonu
     const allColumns = [
-      { id: 'employeeNo', label: 'Employee No', getValue: (emp) => emp.employeeNo },
-      { id: 'firstName', label: 'First Name', getValue: (emp) => emp.firstName },
-      { id: 'lastName', label: 'Last Name', getValue: (emp) => emp.lastName },
-      { id: 'profession', label: 'Profession', getValue: (emp) => emp.profession },
+      { id: 'employeeNo', label: 'Employee No', getValue: (emp: any) => emp.employeeNo },
+      { id: 'fullName', label: 'Full Name', getValue: (emp: any) => `${emp.firstName} ${emp.lastName}` },
+      { id: 'departmentId', label: 'Department', getValue: (emp: any) => emp.department?.name || '' },
+      { id: 'profession', label: 'Profession', getValue: (emp: any) => emp.profession },
       { 
         id: 'employmentStatus', 
         label: 'Status', 
-        getValue: (emp) => {
+        getValue: (emp: any) => {
           if (emp.employmentStatus === 1) return 'Active';
           if (emp.employmentStatus === 2) return 'On Leave';
           if (emp.employmentStatus === 3) return 'Terminated';
           return 'Unknown';
         }
       },
-      { id: 'hireDate', label: 'Hire Date', getValue: (emp) => new Date(emp.hireDate).toLocaleDateString() },
+      { id: 'hireDate', label: 'Hire Date', getValue: (emp: any) => new Date(emp.hireDate).toLocaleDateString() },
     ];
 
     // 2. Sadece görünür olan kolonları filtrele (columnVisibility state'ine göre)
@@ -303,6 +308,128 @@ export const ActiveRoster = () => {
   };
 
   const activeColumnFilterCount = Object.keys(columnFilters).length;
+  const navigate = useNavigate();
+
+  const columns: DataTableColumnDef[] = [
+    {
+      field: 'employeeNo',
+      headerName: 'Employee No',
+      flex: 1,
+      minWidth: 185,
+      filterType: 'text',
+    },
+    {
+      field: 'fullName',
+      headerName: 'Full Name',
+      flex: 1.5,
+      minWidth: 200,
+      filterType: 'text',
+      valueGetter: (_, row: any) => `${row.firstName} ${row.lastName}`,
+    },
+    {
+      field: 'departmentId',
+      headerName: 'Department',
+      flex: 1,
+      minWidth: 185,
+      filterType: 'multi-select',
+      filterOptions: departmentOptions,
+      valueGetter: (_, row: any) => row.department?.name || '',
+    },
+    {
+      field: 'profession',
+      headerName: 'Profession',
+      flex: 1.5,
+      minWidth: 195,
+      filterType: 'text',
+      renderCell: (params) => (
+        <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
+          {params.value}
+        </Typography>
+      )
+    },
+    {
+      field: 'employmentStatus',
+      headerName: 'Status',
+      flex: 1,
+      minWidth: 185,
+      filterType: 'select',
+      filterOptions: [
+        { value: '1', label: 'Active' },
+        { value: '2', label: 'On Leave' },
+        { value: '3', label: 'Terminated' },
+      ],
+      renderCell: (params) => {
+        const val = params.value as number;
+        
+        const getChipStyles = (status: number) => {
+          switch(status) {
+            case 1:
+              return {
+                bg: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(46, 125, 50, 0.15)' : 'rgba(46, 125, 50, 0.08)',
+                color: (theme: any) => theme.palette.mode === 'dark' ? '#81c784' : '#2e7d32',
+                border: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(129, 199, 132, 0.2)' : 'rgba(46, 125, 50, 0.15)',
+                label: 'Active'
+              };
+            case 2:
+              return {
+                bg: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(237, 108, 2, 0.15)' : 'rgba(237, 108, 2, 0.08)',
+                color: (theme: any) => theme.palette.mode === 'dark' ? '#ffb74d' : '#ed6c02',
+                border: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(255, 183, 77, 0.2)' : 'rgba(237, 108, 2, 0.15)',
+                label: 'On Leave'
+              };
+            case 3:
+              return {
+                bg: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(211, 47, 47, 0.15)' : 'rgba(211, 47, 47, 0.08)',
+                color: (theme: any) => theme.palette.mode === 'dark' ? '#e57373' : '#d32f2f',
+                border: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(229, 115, 115, 0.2)' : 'rgba(211, 47, 47, 0.15)',
+                label: 'Terminated'
+              };
+            default:
+              return {
+                bg: 'transparent',
+                color: 'text.secondary',
+                border: 'divider',
+                label: 'Unknown'
+              };
+          }
+        };
+
+        const styles = getChipStyles(val);
+
+        return (
+          <Chip
+            label={styles.label}
+            size="small"
+            sx={{
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              backgroundColor: styles.bg,
+              color: styles.color,
+              border: '1px solid',
+              borderColor: styles.border,
+              borderRadius: '6px',
+              height: '24px',
+            }}
+          />
+        );
+      },
+    },
+    {
+      field: 'hireDate',
+      headerName: 'Hire Date',
+      flex: 1,
+      minWidth: 185,
+      filterType: 'date',
+      valueGetter: (value: string | null | undefined) => {
+        if (!value) return null;
+        return new Date(value);
+      },
+      valueFormatter: (value: Date | null | undefined) => {
+        if (!value) return '';
+        return new Date(value).toLocaleDateString();
+      },
+    },
+  ];
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1536, margin: '0 auto' }}>
@@ -355,7 +482,7 @@ export const ActiveRoster = () => {
             anchorEl={columnMenuAnchor}
             open={Boolean(columnMenuAnchor)}
             onClose={() => setColumnMenuAnchor(null)}
-            PaperProps={{ sx: { borderRadius: 3, minWidth: 220, mt: 1, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' } }}
+            slotProps={{ paper: { sx: { borderRadius: 3, minWidth: 220, mt: 1, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' } } }}
           >
             <Box sx={{ px: 2, pt: 1.5, pb: 1 }}>
               <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
@@ -370,7 +497,7 @@ export const ActiveRoster = () => {
             {Object.keys(COLUMN_NAMES).map((key) => (
               <MenuItem key={key} onClick={() => handleColumnToggle(key)} sx={{ py: 0.5 }}>
                 <Checkbox checked={columnVisibility[key] !== false} size="small" sx={{ pointerEvents: 'none', py: 0 }} />
-                <ListItemText primary={COLUMN_NAMES[key]} primaryTypographyProps={{ variant: 'body2' }} />
+                <ListItemText primary={COLUMN_NAMES[key]} slotProps={{ primary: { variant: 'body2' } }} />
               </MenuItem>
             ))}
           </Menu>
@@ -464,7 +591,7 @@ export const ActiveRoster = () => {
 
           <Divider sx={{ opacity: 0.4 }} />
 
-          <Stack direction="row" spacing={2} alignItems="center" sx={{ flexWrap: 'wrap', gap: 2 }}>
+          <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
             <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600, color: 'text.secondary' }}>
               <AutoAwesomeRounded fontSize="small" /> Quick Filters:
             </Typography>
@@ -533,16 +660,18 @@ export const ActiveRoster = () => {
           boxShadow: '0 4px 24px rgba(0, 0, 0, 0.03)',
         }}
       >
-        <ActiveRosterTable
+        <DataTable
           data={data?.items || []}
           totalCount={data?.totalCount || 0}
           loading={isLoading || isFetching}
+          columns={columns}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           columnVisibilityModel={columnVisibility}
           onColumnVisibilityModelChange={setColumnVisibility}
           customFilters={columnFilters}
           onCustomFilterChange={handleCustomFilterChange}
+          onRowClick={(id) => navigate(`/employees/${id}`)}
         />
       </Box>
     </Box>

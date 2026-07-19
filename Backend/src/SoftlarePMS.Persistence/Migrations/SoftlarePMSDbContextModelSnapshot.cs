@@ -70,6 +70,30 @@ namespace SoftlarePMS.Persistence.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("SoftlarePMS.Domain.Entities.Department", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Departments");
+                });
+
             modelBuilder.Entity("SoftlarePMS.Domain.Entities.Employee", b =>
                 {
                     b.Property<Guid>("Id")
@@ -84,6 +108,9 @@ namespace SoftlarePMS.Persistence.Migrations
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("EmployeeNo")
                         .IsRequired()
@@ -139,6 +166,8 @@ namespace SoftlarePMS.Persistence.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
+                    b.HasIndex("DepartmentId");
+
                     b.HasIndex("EmployeeNo")
                         .IsUnique()
                         .HasDatabaseName("IX_Employees_EmployeeNo");
@@ -182,9 +211,6 @@ namespace SoftlarePMS.Persistence.Migrations
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("bit");
 
@@ -193,9 +219,6 @@ namespace SoftlarePMS.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("State")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -203,8 +226,7 @@ namespace SoftlarePMS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId", "EndDate")
-                        .HasDatabaseName("IX_EmployeeAddresses_EmployeeId_EndDate");
+                    b.HasIndex("EmployeeId");
 
                     b.ToTable("EmployeeAddresses");
                 });
@@ -524,7 +546,14 @@ namespace SoftlarePMS.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("SoftlarePMS.Domain.Entities.Department", "Department")
+                        .WithMany("Employees")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("SoftlarePMS.Domain.Entities.EmployeeAddress", b =>
@@ -652,6 +681,11 @@ namespace SoftlarePMS.Persistence.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SoftlarePMS.Domain.Entities.Department", b =>
+                {
+                    b.Navigation("Employees");
                 });
 
             modelBuilder.Entity("SoftlarePMS.Domain.Entities.Employee", b =>

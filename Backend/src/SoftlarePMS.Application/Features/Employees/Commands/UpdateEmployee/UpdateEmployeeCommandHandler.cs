@@ -27,6 +27,7 @@ public sealed class UpdateEmployeeCommandHandler(
         employee.ProbationEndDate   = request.ProbationEndDate;
         employee.WorkingHoursPerWeek = request.WorkingHoursPerWeek;
         employee.VacationDaysTotal  = request.VacationDaysTotal;
+        employee.DepartmentId       = request.DepartmentId;
 
         await context.SaveChangesAsync(cancellationToken);
 

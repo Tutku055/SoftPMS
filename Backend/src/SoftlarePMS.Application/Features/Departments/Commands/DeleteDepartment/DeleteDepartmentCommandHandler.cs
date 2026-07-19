@@ -1,0 +1,28 @@
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using SoftlarePMS.Application.Common.Interfaces;
+using SoftlarePMS.Domain.Entities;
+using SoftlarePMS.Domain.Exceptions;
+
+namespace SoftlarePMS.Application.Features.Departments.Commands.DeleteDepartment;
+
+public sealed class DeleteDepartmentCommandHandler(
+    IApplicationDbContext context)
+    : IRequestHandler<DeleteDepartmentCommand, Unit>
+{
+    public async Task<Unit> Handle(DeleteDepartmentCommand request, CancellationToken cancellationToken)
+    {
+        var department = await context.Departments
+            .FirstOrDefaultAsync(d => d.Id == request.Id, cancellationToken);
+
+        if (department is null)
+        {
+            throw new NotFoundException(nameof(Department), request.Id);
+        }
+
+        context.Departments.Remove(department);
+        await context.SaveChangesAsync(cancellationToken);
+
+        return Unit.Value;
+    }
+}

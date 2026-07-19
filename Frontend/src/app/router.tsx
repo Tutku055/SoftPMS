@@ -3,7 +3,8 @@ import { useAuthStore } from '../store/useAuthStore';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { Login } from '../features/auth/components/Login/Login';
 
-import { ActiveRoster } from '../features/employees/ActiveRoster';
+import { Roster } from '../features/employees/Roster';
+import { EmployeeDetail } from '../features/employees/EmployeeDetail';
 
 const RolesList = () => <div>RolesList</div>;
 const UsersList = () => <div>UsersList</div>;
@@ -39,8 +40,12 @@ export const router = createBrowserRouter([
             element: <div>Dashboard</div>
           },
           {
-            path: 'employees/active',
-            element: <ActiveRoster />,
+            path: 'employees/roster',
+            element: <Roster />,
+          },
+          {
+            path: 'employees/:id',
+            element: <EmployeeDetail />,
           },
           {
             path: 'roles',

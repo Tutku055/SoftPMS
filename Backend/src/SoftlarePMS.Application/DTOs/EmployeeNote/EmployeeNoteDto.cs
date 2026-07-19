@@ -1,8 +1,9 @@
-﻿namespace SoftlarePMS.Application.DTOs.EmployeeNote;
+namespace SoftlarePMS.Application.DTOs.EmployeeNote;
 
-public record EmployeeNoteDto(
-    Guid Id,
-    string Title,
-    string Content,
-    DateTime CreatedAt
-);
+public record EmployeeNoteDto
+{
+    public Guid Id { get; init; }
+    public string Title { get; init; }
+    public string Content { get; init; }
+    public DateTime CreatedAt { get; init; }
+}

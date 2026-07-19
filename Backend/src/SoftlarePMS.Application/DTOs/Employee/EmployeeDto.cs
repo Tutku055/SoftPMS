@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using SoftlarePMS.Application.DTOs.Department;
 using SoftlarePMS.Domain.Enums;
 
 namespace SoftlarePMS.Application.DTOs.Employee;
@@ -18,5 +19,6 @@ public record EmployeeDto(
     DateTime? TerminationDate,
     DateTime? ProbationEndDate,
     decimal WorkingHoursPerWeek,
-    int VacationDaysTotal
+    int VacationDaysTotal,
+    DepartmentDto? Department
 );

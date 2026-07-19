@@ -7,11 +7,7 @@ using SoftlarePMS.Domain.Exceptions;
 namespace SoftlarePMS.Application.Features.Employees.Commands.UpdateEmployeeAddress;
 
 /// <summary>
-/// Implements historic address tracking:
-///   1. Locate the currently active address (EndDate == null).
-///   2. Close it: set EndDate = NewStartDate - 1 day.
-///   3. Insert a new address record with StartDate = NewStartDate and EndDate = null.
-/// Both operations are committed in a single SaveChangesAsync call.
+/// Updates an employee's address.
 /// </summary>
 public sealed class UpdateEmployeeAddressCommandHandler(
     IApplicationDbContext context,
@@ -27,36 +23,37 @@ public sealed class UpdateEmployeeAddressCommandHandler(
         if (!employeeExists)
             throw new NotFoundException(nameof(Employee), request.EmployeeId);
 
-        // Step 1: Close the current active address
-        var activeAddress = await context.EmployeeAddresses
+        // Find the employee's existing address (we assume there's only one or we just update the first one)
+        var address = await context.EmployeeAddresses
             .FirstOrDefaultAsync(
-                a => a.EmployeeId == request.EmployeeId && a.EndDate == null,
+                a => a.EmployeeId == request.EmployeeId,
                 cancellationToken);
 
-        if (activeAddress is not null)
+        if (address is not null)
         {
-            // EndDate is set to one day before the new address becomes effective
-            activeAddress.EndDate = request.NewStartDate.AddDays(-1).Date;
+            address.AddressLine = request.AddressLine;
+            address.PostalCode  = request.PostalCode;
+            address.City        = request.City;
+            address.State       = request.State;
+            address.Country     = request.Country;
+            address.IsPrimary   = request.IsPrimary;
+        }
+        else
+        {
+            var newAddress = new EmployeeAddress
+            {
+                EmployeeId  = request.EmployeeId,
+                AddressLine = request.AddressLine,
+                PostalCode  = request.PostalCode,
+                City        = request.City,
+                State       = request.State,
+                Country     = request.Country,
+                IsPrimary   = request.IsPrimary,
+                CreatedAt   = dateTime.UtcNow
+            };
+            await context.EmployeeAddresses.AddAsync(newAddress, cancellationToken);
         }
 
-        // Step 2: Insert the new address as the active record
-        var newAddress = new EmployeeAddress
-        {
-            EmployeeId  = request.EmployeeId,
-            AddressLine = request.AddressLine,
-            PostalCode  = request.PostalCode,
-            City        = request.City,
-            State       = request.State,
-            Country     = request.Country,
-            IsPrimary   = request.IsPrimary,
-            StartDate   = request.NewStartDate.Date,
-            EndDate     = null,
-            CreatedAt   = dateTime.UtcNow
-        };
-
-        await context.EmployeeAddresses.AddAsync(newAddress, cancellationToken);
-
-        // Both the close and the insert are committed atomically
         await context.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;

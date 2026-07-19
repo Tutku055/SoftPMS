@@ -34,6 +34,8 @@ public class Employee: BaseEntity
 
     public Guid CreatedByUserId { get; set; }
 
+    public Guid? DepartmentId { get; set; }
+
     // Navigation properties
     public virtual User CreatedByUser { get; set; } = null!;
 
@@ -48,4 +50,6 @@ public class Employee: BaseEntity
     public virtual ICollection<EmployeeNote> Notes { get; set; } = new HashSet<EmployeeNote>();
 
     public virtual ICollection<EmployeeReference> References { get; set; } = new HashSet<EmployeeReference>();
+
+    public virtual Department? Department { get; set; }
 }

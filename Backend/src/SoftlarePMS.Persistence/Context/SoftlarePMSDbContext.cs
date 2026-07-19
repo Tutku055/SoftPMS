@@ -26,6 +26,7 @@ public class SoftlarePMSDbContext : DbContext, IApplicationDbContext
     #endregion
 
     #region Core Personnel DbSets
+    public DbSet<Department> Departments { get; set; }
     public DbSet<Employee> Employees { get; set; }
     public DbSet<EmployeeAddress> EmployeeAddresses { get; set; }
     public DbSet<EmployeeCompensation> EmployeeCompensations { get; set; }

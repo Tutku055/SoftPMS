@@ -1,12 +1,13 @@
-﻿using SoftlarePMS.Domain.Enums;
+using SoftlarePMS.Domain.Enums;
 
 namespace SoftlarePMS.Application.DTOs.EmployeeCompensation;
 
-public record EmployeeCompensationDto(
-    Guid Id,
-    decimal BaseSalary,
-    SalaryType SalaryType,
-    string PayGrade,
-    DateTime EffectiveDate,
-    bool IsActive
-);
+public record EmployeeCompensationDto
+{
+    public Guid Id { get; init; }
+    public decimal BaseSalary { get; init; }
+    public SalaryType SalaryType { get; init; }
+    public string PayGrade { get; init; }
+    public DateTime EffectiveDate { get; init; }
+    public bool IsActive { get; init; }
+}

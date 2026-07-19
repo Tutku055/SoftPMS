@@ -1,10 +1,10 @@
 namespace SoftlarePMS.Application.DTOs.EmployeeAddress;
 
-public record UpdateEmployeeAddressDto(
-    string AddressTitle,
-    string Country,
-    string City,
-    string District,
-    string FullAddress,
-    string ZipCode
-);
+public record UpdateEmployeeAddressDto
+{
+    public string AddressLine { get; init; }
+    public string Country { get; init; }
+    public string City { get; init; }
+    public string State { get; init; }
+    public string PostalCode { get; init; }
+}

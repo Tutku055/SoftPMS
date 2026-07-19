@@ -41,7 +41,7 @@ const menuConfig: MenuItem[] = [
     title: 'Personnel Operations', 
     icon: <PeopleAlt />,
     children: [
-      { title: 'Roster', path: '/employees/active' },
+      { title: 'Roster', path: '/employees/roster' },
       { title: 'Time & Attendance', path: '/employees/time-tracking' },
       { title: 'Notes & References', path: '/employees/notes' }
     ]

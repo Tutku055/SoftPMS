@@ -1,4 +1,3 @@
-// ActiveRosterTable.tsx
 import {
   DataGrid,
 } from '@mui/x-data-grid';
@@ -8,21 +7,29 @@ import type {
   GridColumnVisibilityModel,
   GridColumnHeaderParams,
 } from '@mui/x-data-grid';
-import { Box, Chip, Stack, TextField, MenuItem, Typography } from '@mui/material';
-import type { EmployeeDto } from '../types';
+import { Box, Stack, TextField, MenuItem, Typography } from '@mui/material';
 
 export type CustomFilterValue = { value: string; operator: string };
+export type FilterType = 'text' | 'date' | 'select' | 'multi-select';
 
-interface ActiveRosterTableProps {
-  data: EmployeeDto[];
+export type DataTableColumnDef = Omit<GridColDef, 'renderHeader'> & {
+  filterType?: FilterType;
+  filterOptions?: { value: string; label: string }[];
+  disableFilter?: boolean;
+};
+
+interface DataTableProps {
+  data: any[];
   totalCount: number;
   loading: boolean;
+  columns: DataTableColumnDef[];
   paginationModel: GridPaginationModel;
   onPaginationModelChange: (model: GridPaginationModel) => void;
   columnVisibilityModel?: GridColumnVisibilityModel;
   onColumnVisibilityModelChange?: (model: GridColumnVisibilityModel) => void;
   customFilters: Record<string, CustomFilterValue>;
   onCustomFilterChange: (field: string, value: string, operator: string) => void;
+  onRowClick?: (id: string) => void;
 }
 
 const STRING_OPERATORS = [
@@ -43,8 +50,13 @@ const SELECT_OPERATORS = [
   { value: 'not', label: 'Is Not' },
 ];
 
+const MULTI_SELECT_OPERATORS = [
+  { value: 'in', label: 'In' },
+  { value: 'notin', label: 'Not In' },
+];
+
 // Premium Input Stilleri
-const premiumInputSx = {
+export const premiumInputSx = {
   '& .MuiOutlinedInput-root': {
     fontSize: '0.75rem',
     borderRadius: '6px',
@@ -83,16 +95,16 @@ const premiumInputSx = {
 const renderHeaderWithFilter = (
   field: string,
   headerName: string,
-  filterType: 'text' | 'date' | 'select',
+  filterType: FilterType,
   customFilters: Record<string, CustomFilterValue>,
   onCustomFilterChange: (field: string, value: string, operator: string) => void,
   options?: { value: string; label: string }[]
 ) => {
-  return (params: GridColumnHeaderParams) => {
-    const filterState = customFilters[field] || { value: '', operator: filterType === 'text' ? 'contains' : 'is' };
+  return (_params: GridColumnHeaderParams) => {
+    const filterState = customFilters[field] || { value: '', operator: filterType === 'text' ? 'contains' : filterType === 'multi-select' ? 'in' : 'is' };
     const { value, operator } = filterState;
 
-    const opList = filterType === 'text' ? STRING_OPERATORS : filterType === 'date' ? DATE_OPERATORS : SELECT_OPERATORS;
+    const opList = filterType === 'text' ? STRING_OPERATORS : filterType === 'date' ? DATE_OPERATORS : filterType === 'multi-select' ? MULTI_SELECT_OPERATORS : SELECT_OPERATORS;
 
     return (
       <Stack spacing={0.5} sx={{ width: '100%', pt: 1, pb: 0.5, height: '100%', justifyContent: 'flex-end' }}>
@@ -157,6 +169,45 @@ const renderHeaderWithFilter = (
                 </MenuItem>
               ))}
             </TextField>
+          ) : filterType === 'multi-select' && options ? (
+            <TextField
+              select
+              size="small"
+              value={value ? value.split(',') : []}
+              onChange={(e) => {
+                const val = e.target.value as unknown as string[];
+                if (val.includes('') || val.length === 0) {
+                  onCustomFilterChange(field, '', operator);
+                } else {
+                  onCustomFilterChange(field, val.join(','), operator);
+                }
+              }}
+              slotProps={{
+                select: {
+                  multiple: true,
+                  renderValue: (selected: any) => {
+                    const arr = selected as string[];
+                    if (arr.length === 0 || (arr.length === 1 && arr[0] === '')) return 'All';
+                    if (arr.length === 1) return options.find(o => o.value === arr[0])?.label || arr[0];
+                    return `${arr.length} selected`;
+                  }
+                }
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              sx={{
+                flex: 1,
+                ...premiumInputSx,
+                '& .MuiSelect-select': { py: 0.5, display: 'flex', alignItems: 'center' }
+              }}
+            >
+              <MenuItem value="" sx={{ fontSize: '0.75rem', fontWeight: 500 }}>All</MenuItem>
+              {options.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value} sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </TextField>
           ) : filterType === 'date' ? (
             <TextField
               type="date"
@@ -192,141 +243,41 @@ const renderHeaderWithFilter = (
   };
 };
 
-export const ActiveRosterTable = ({
+export const DataTable = ({
   data,
   totalCount,
   loading,
+  columns,
   paginationModel,
   onPaginationModelChange,
   columnVisibilityModel,
   onColumnVisibilityModelChange,
   customFilters,
   onCustomFilterChange,
-}: ActiveRosterTableProps) => {
+  onRowClick,
+}: DataTableProps) => {
 
-  // Kolonların minWidth değerleri yan yana duran iki kutunun sıkışmaması için 185px-190px bandına çekildi
-  const columns: GridColDef[] = [
-    {
-      field: 'employeeNo',
-      headerName: 'Employee No',
-      flex: 1,
-      minWidth: 185,
-      renderHeader: renderHeaderWithFilter('employeeNo', 'Employee No', 'text', customFilters, onCustomFilterChange),
-    },
-    {
-      field: 'firstName',
-      headerName: 'First Name',
-      flex: 1,
-      minWidth: 185,
-      renderHeader: renderHeaderWithFilter('firstName', 'First Name', 'text', customFilters, onCustomFilterChange),
-    },
-    {
-      field: 'lastName',
-      headerName: 'Last Name',
-      flex: 1,
-      minWidth: 185,
-      renderHeader: renderHeaderWithFilter('lastName', 'Last Name', 'text', customFilters, onCustomFilterChange),
-    },
-    {
-      field: 'profession',
-      headerName: 'Profession',
-      flex: 1.5,
-      minWidth: 195,
-      renderHeader: renderHeaderWithFilter('profession', 'Profession', 'text', customFilters, onCustomFilterChange),
-      renderCell: (params) => (
-        <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
-          {params.value}
-        </Typography>
-      )
-    },
-    {
-      field: 'employmentStatus',
-      headerName: 'Status',
-      flex: 1,
-      minWidth: 185,
-      renderHeader: renderHeaderWithFilter('employmentStatus', 'Status', 'select', customFilters, onCustomFilterChange, [
-        { value: '1', label: 'Active' },
-        { value: '2', label: 'On Leave' },
-        { value: '3', label: 'Terminated' },
-      ]),
-      renderCell: (params) => {
-        const val = params.value as number;
-        
-        const getChipStyles = (status: number) => {
-          switch(status) {
-            case 1:
-              return {
-                bg: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(46, 125, 50, 0.15)' : 'rgba(46, 125, 50, 0.08)',
-                color: (theme: any) => theme.palette.mode === 'dark' ? '#81c784' : '#2e7d32',
-                border: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(129, 199, 132, 0.2)' : 'rgba(46, 125, 50, 0.15)',
-                label: 'Active'
-              };
-            case 2:
-              return {
-                bg: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(237, 108, 2, 0.15)' : 'rgba(237, 108, 2, 0.08)',
-                color: (theme: any) => theme.palette.mode === 'dark' ? '#ffb74d' : '#ed6c02',
-                border: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(255, 183, 77, 0.2)' : 'rgba(237, 108, 2, 0.15)',
-                label: 'On Leave'
-              };
-            case 3:
-              return {
-                bg: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(211, 47, 47, 0.15)' : 'rgba(211, 47, 47, 0.08)',
-                color: (theme: any) => theme.palette.mode === 'dark' ? '#e57373' : '#d32f2f',
-                border: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(229, 115, 115, 0.2)' : 'rgba(211, 47, 47, 0.15)',
-                label: 'Terminated'
-              };
-            default:
-              return {
-                bg: 'transparent',
-                color: 'text.secondary',
-                border: 'divider',
-                label: 'Unknown'
-              };
-          }
-        };
-
-        const styles = getChipStyles(val);
-
-        return (
-          <Chip
-            label={styles.label}
-            size="small"
-            sx={{
-              fontWeight: 600,
-              fontSize: '0.75rem',
-              backgroundColor: styles.bg,
-              color: styles.color,
-              border: '1px solid',
-              borderColor: styles.border,
-              borderRadius: '6px',
-              height: '24px',
-            }}
-          />
-        );
-      },
-    },
-    {
-      field: 'hireDate',
-      headerName: 'Hire Date',
-      flex: 1,
-      minWidth: 185,
-      renderHeader: renderHeaderWithFilter('hireDate', 'Hire Date', 'date', customFilters, onCustomFilterChange),
-      valueGetter: (value: string | null | undefined) => {
-        if (!value) return null;
-        return new Date(value);
-      },
-      valueFormatter: (value: Date | null | undefined) => {
-        if (!value) return '';
-        return new Date(value).toLocaleDateString();
-      },
-    },
-  ];
+  const mappedColumns: GridColDef[] = columns.map((col) => {
+    const gridCol: GridColDef = { ...col } as GridColDef;
+    
+    if (col.filterType && !col.disableFilter) {
+      gridCol.renderHeader = renderHeaderWithFilter(
+        col.field,
+        col.headerName || col.field,
+        col.filterType,
+        customFilters,
+        onCustomFilterChange,
+        col.filterOptions
+      );
+    }
+    return gridCol;
+  });
 
   return (
     <Box sx={{ width: '100%' }}>
       <DataGrid
         rows={data}
-        columns={columns}
+        columns={mappedColumns}
         getRowId={(row) => row.id}
         loading={loading}
         rowCount={totalCount}
@@ -341,6 +292,7 @@ export const ActiveRosterTable = ({
         disableRowSelectionOnClick
         disableMultipleRowSelection
         disableColumnMenu
+        onRowClick={onRowClick ? (params) => onRowClick(params.row.id) : undefined}
         sx={{
           border: 'none',
           backgroundColor: 'transparent',
@@ -356,6 +308,7 @@ export const ActiveRosterTable = ({
             borderBottom: '1px solid',
             borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
             fontSize: '0.875rem',
+            cursor: onRowClick ? 'pointer' : 'default',
           },
           '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
             outline: 'none',

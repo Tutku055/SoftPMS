@@ -105,6 +105,23 @@ public static class EmployeeQueryExtensions
                                          e.LastName.ToLower().Contains(val) ||
                                          e.EmployeeNo.ToLower().Contains(val));
             }
+            else if (string.Equals(field, "departmentId", StringComparison.OrdinalIgnoreCase))
+            {
+                var ids = val.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                             .Select(idStr => Guid.TryParse(idStr.Trim(), out var parsed) ? parsed : Guid.Empty)
+                             .Where(g => g != Guid.Empty)
+                             .ToList();
+
+                if (ids.Any())
+                {
+                    query = op switch
+                    {
+                        "in" => query.Where(e => e.DepartmentId.HasValue && ids.Contains(e.DepartmentId.Value)),
+                        "notin" or "not in" => query.Where(e => !e.DepartmentId.HasValue || !ids.Contains(e.DepartmentId.Value)),
+                        _ => query.Where(e => e.DepartmentId.HasValue && ids.Contains(e.DepartmentId.Value))
+                    };
+                }
+            }
         }
 
         return query;
