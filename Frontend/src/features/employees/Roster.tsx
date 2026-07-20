@@ -55,18 +55,26 @@ export const Roster = () => {
   const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilter>('active');
 
   // ─── CUSTOM COLUMN FILTERS (Bypasses DataGrid Free limits) ────────────────
-  const [columnFilters, setColumnFilters] = useState<Record<string, CustomFilterValue>>({});
+  const [columnFilters, setColumnFilters] = useState<Record<string, CustomFilterValue>>({
+    employmentStatus: { operator: 'is', value: '1' }
+  });
 
   const handleCustomFilterChange = useCallback((field: string, value: string, operator: string) => {
     setColumnFilters((prev) => {
       const next = { ...prev };
-      if (!value) {
-        delete next[field];
-      } else {
-        next[field] = { value, operator };
-      }
+      next[field] = { value, operator };
       return next;
     });
+
+    if (field === 'employmentStatus') {
+      if (value === '1') setActiveQuickFilter('active');
+      else if (value === '3') setActiveQuickFilter('terminated');
+      else setActiveQuickFilter('all');
+    }
+    
+    if (field === 'hireDate' && !value) {
+      setActiveQuickFilter(prev => prev === 'new_hires' ? 'all' : prev);
+    }
   }, []);
 
   const handleClearColumnFilters = useCallback(() => {
@@ -97,31 +105,32 @@ export const Roster = () => {
 
       Object.entries(cols).forEach(([field, filterData]) => {
         const { value, operator } = filterData;
+        if (!value) return;
         
         if (field === 'hireDate') {
           const d = new Date(value + 'T00:00:00');
           filters.push({ field, operator, value: d.toISOString() });
+        } else if (field === 'fullName') {
+          if (operator === 'firstName') {
+            filters.push({ field: 'firstName', operator: 'contains', value });
+          } else if (operator === 'lastName') {
+            filters.push({ field: 'lastName', operator: 'contains', value });
+          } else {
+            const parts = value.trim().split(/\s+/);
+            parts.forEach(part => {
+              filters.push({ field: 'quickSearch', operator: 'contains', value: part });
+            });
+          }
         } else {
           filters.push({ field, operator, value });
         }
       });
 
       if (qs.trim()) {
-        filters.push({ field: 'quickSearch', operator: 'contains', value: qs.trim() });
-      }
-
-      const hasStatusFilter = !!cols['employmentStatus'];
-      const hasDateFilter = !!cols['hireDate'];
-
-      if (qf === 'active' && !hasStatusFilter) {
-        filters.push({ field: 'employmentStatus', operator: 'is', value: '1' });
-      } else if (qf === 'terminated' && !hasStatusFilter) {
-        filters.push({ field: 'employmentStatus', operator: 'is', value: '3' });
-      } else if (qf === 'new_hires' && !hasDateFilter) {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        thirtyDaysAgo.setHours(0, 0, 0, 0);
-        filters.push({ field: 'hireDate', operator: 'after', value: thirtyDaysAgo.toISOString() });
+        const parts = qs.trim().split(/\s+/);
+        parts.forEach(part => {
+          filters.push({ field: 'quickSearch', operator: 'contains', value: part });
+        });
       }
 
       return filters;
@@ -150,8 +159,30 @@ export const Roster = () => {
   }, [quickSearch]);
 
   const handleQuickFilterClick = (code: QuickFilter) => {
-    setActiveQuickFilter((prev) => (prev === code ? 'all' : code));
-    setColumnFilters({});
+    const newCode = activeQuickFilter === code ? 'all' : code;
+    setActiveQuickFilter(newCode);
+    
+    setColumnFilters(prev => {
+      const next = { ...prev };
+      if (newCode === 'active') {
+        next['employmentStatus'] = { operator: 'is', value: '1' };
+        if (next['hireDate']) next['hireDate'] = { ...next['hireDate'], value: '' };
+      } else if (newCode === 'terminated') {
+        next['employmentStatus'] = { operator: 'is', value: '3' };
+        if (next['hireDate']) next['hireDate'] = { ...next['hireDate'], value: '' };
+      } else if (newCode === 'new_hires') {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        thirtyDaysAgo.setHours(0, 0, 0, 0);
+        next['hireDate'] = { operator: 'after', value: thirtyDaysAgo.toISOString().split('T')[0] };
+        if (next['employmentStatus']) next['employmentStatus'] = { ...next['employmentStatus'], value: '' };
+      } else {
+        if (next['employmentStatus']) next['employmentStatus'] = { ...next['employmentStatus'], value: '' };
+        if (next['hireDate']) next['hireDate'] = { ...next['hireDate'], value: '' };
+      }
+      return next;
+    });
+
     setQuickSearch('');
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   };
@@ -307,7 +338,7 @@ export const Roster = () => {
     URL.revokeObjectURL(url);
   };
 
-  const activeColumnFilterCount = Object.keys(columnFilters).length;
+  const activeColumnFilterCount = Object.values(columnFilters).filter(f => !!f.value).length;
   const navigate = useNavigate();
 
   const columns: DataTableColumnDef[] = [
@@ -323,7 +354,7 @@ export const Roster = () => {
       headerName: 'Full Name',
       flex: 1.5,
       minWidth: 200,
-      filterType: 'text',
+      filterType: 'fullName',
       valueGetter: (_, row: any) => `${row.firstName} ${row.lastName}`,
     },
     {

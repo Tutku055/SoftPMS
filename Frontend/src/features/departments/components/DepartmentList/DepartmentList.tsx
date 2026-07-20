@@ -49,7 +49,7 @@ const COLUMN_NAMES: Record<string, string> = {
   employeeCount: 'Employee Count',
 };
 
-type QuickFilter = 'all';
+type QuickFilter = 'all' | 'empty';
 
 export const DepartmentList = () => {
   const [quickSearch, setQuickSearch] = useState('');
@@ -66,13 +66,14 @@ export const DepartmentList = () => {
   const handleCustomFilterChange = useCallback((field: string, value: string, operator: string) => {
     setColumnFilters((prev) => {
       const next = { ...prev };
-      if (!value) {
-        delete next[field];
-      } else {
-        next[field] = { value, operator };
-      }
+      next[field] = { value, operator };
       return next;
     });
+
+    if (field === 'employeeCount') {
+      if (value === '0' && operator === 'is') setActiveQuickFilter('empty');
+      else setActiveQuickFilter('all');
+    }
   }, []);
 
   const handleClearColumnFilters = useCallback(() => {
@@ -97,6 +98,7 @@ export const DepartmentList = () => {
 
       Object.entries(cols).forEach(([field, filterData]) => {
         const { value, operator } = filterData;
+        if (!value) return;
         filters.push({ field, operator, value });
       });
 
@@ -129,8 +131,19 @@ export const DepartmentList = () => {
   }, [quickSearch]);
 
   const handleQuickFilterClick = (code: QuickFilter) => {
-    setActiveQuickFilter((prev) => (prev === code ? 'all' : code));
-    setColumnFilters({});
+    const newCode = activeQuickFilter === code ? 'all' : code;
+    setActiveQuickFilter(newCode);
+    
+    setColumnFilters(prev => {
+      const next = { ...prev };
+      if (newCode === 'empty') {
+        next['employeeCount'] = { operator: 'is', value: '0' };
+      } else {
+        if (next['employeeCount']) next['employeeCount'] = { ...next['employeeCount'], value: '' };
+      }
+      return next;
+    });
+
     setQuickSearch('');
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   };
@@ -237,7 +250,7 @@ export const DepartmentList = () => {
     URL.revokeObjectURL(url);
   };
 
-  const activeColumnFilterCount = Object.keys(columnFilters).length;
+  const activeColumnFilterCount = Object.values(columnFilters).filter(f => !!f.value).length;
   const navigate = useNavigate();
 
   const columns: DataTableColumnDef[] = [
@@ -467,9 +480,10 @@ export const DepartmentList = () => {
               <AutoAwesomeRounded fontSize="small" /> Quick Filters:
             </Typography>
 
-            {(['all'] as QuickFilter[]).map((code) => {
+            {(['all', 'empty'] as QuickFilter[]).map((code) => {
               const labels: Record<QuickFilter, string> = {
-                all: 'All Departments'
+                all: 'All Departments',
+                empty: 'Empty Departments'
               };
               const isActive = activeQuickFilter === code;
               

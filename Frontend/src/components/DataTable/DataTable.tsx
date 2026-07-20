@@ -10,7 +10,7 @@ import type {
 import { Box, Stack, TextField, MenuItem, Typography } from '@mui/material';
 
 export type CustomFilterValue = { value: string; operator: string };
-export type FilterType = 'text' | 'date' | 'select' | 'multi-select' | 'number';
+export type FilterType = 'text' | 'date' | 'select' | 'multi-select' | 'number' | 'fullName';
 
 export type DataTableColumnDef = Omit<GridColDef, 'renderHeader'> & {
   filterType?: FilterType;
@@ -37,6 +37,12 @@ const STRING_OPERATORS = [
   { value: 'equals', label: 'Equals' },
   { value: 'startswith', label: 'Starts with' },
   { value: 'endswith', label: 'Ends with' },
+];
+
+const FULLNAME_OPERATORS = [
+  { value: 'contains', label: 'Contains' },
+  { value: 'firstName', label: 'First Name' },
+  { value: 'lastName', label: 'Last Name' },
 ];
 
 const DATE_OPERATORS = [
@@ -107,7 +113,7 @@ const renderHeaderWithFilter = (
   options?: { value: string; label: string }[]
 ) => {
   return (_params: GridColumnHeaderParams) => {
-    const filterState = customFilters[field] || { value: '', operator: filterType === 'text' ? 'contains' : filterType === 'multi-select' ? 'in' : 'is' };
+    const filterState = customFilters[field] || { value: '', operator: (filterType === 'text' || filterType === 'fullName') ? 'contains' : filterType === 'multi-select' ? 'in' : 'is' };
     const { value, operator } = filterState;
 
     const getOpList = () => {
@@ -115,6 +121,7 @@ const renderHeaderWithFilter = (
       if (filterType === 'select') return SELECT_OPERATORS;
       if (filterType === 'multi-select') return MULTI_SELECT_OPERATORS;
       if (filterType === 'number') return NUMBER_OPERATORS;
+      if (filterType === 'fullName') return FULLNAME_OPERATORS;
       return STRING_OPERATORS;
     };
     const opList = getOpList();
