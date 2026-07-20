@@ -17,7 +17,6 @@ namespace SoftPMS.WebApi.Controllers;
 public sealed class EmployeesController : ApiControllerBase
 {
     /// <summary>Get a paginated, filtered list of employees.</summary>
-    /// <summary>Get a paginated, dynamically filtered list of employees.</summary>
     [HttpPost("roster")]
     [HasPermission("Employees.Read")]
     [ProducesResponseType(typeof(PaginatedList<EmployeeDto>), StatusCodes.Status200OK)]
@@ -58,7 +57,6 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateEmployeeCommand command, CancellationToken ct)
     {
-        // Ensure the route id matches the command body
         if (id != command.EmployeeId)
             return BadRequest(new { message = "Route id does not match command EmployeeId." });
 
