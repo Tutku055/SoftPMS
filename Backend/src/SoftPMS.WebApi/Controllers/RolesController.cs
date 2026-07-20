@@ -67,10 +67,7 @@ public sealed class RolesController : ApiControllerBase
         return NoContent();
     }
 
-    /// <summary>
-    /// Replace the complete permission set for a role.
-    /// Send an empty list to remove all permissions.
-    /// </summary>
+    /// <summary>Replace the complete permission set for a role.</summary>
     [HttpPut("{id:guid}/permissions")]
     [HasPermission("Roles.Update")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
