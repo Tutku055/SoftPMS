@@ -1,0 +1,22 @@
+using MediatR;
+using SoftPMS.Domain.Enums;
+
+namespace SoftPMS.Application.Features.Employees.Commands.UpdateEmployee;
+
+/// <summary>Command to update a employee's core profile fields (not address or rate — those have dedicated commands).</summary>
+public sealed record UpdateEmployeeCommand(
+    Guid EmployeeId,
+    string FirstName,
+    string LastName,
+    Gender Gender,
+    DateTime DateOfBirth,
+    string Nationality,
+    string Profession,
+    EmploymentStatus EmploymentStatus,
+    DateTime HireDate,
+    DateTime? TerminationDate,
+    DateTime? ProbationEndDate,
+    decimal WorkingHoursPerWeek,
+    int VacationDaysTotal,
+    Guid? DepartmentId
+) : IRequest<Unit>;

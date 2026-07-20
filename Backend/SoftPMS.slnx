@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Core/">
+    <Project Path="src/SoftPMS.Application/SoftPMS.Application.csproj" />
+    <Project Path="src/SoftPMS.Domain/SoftPMS.Domain.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="src/SoftPMS.Infrastructure/SoftPMS.Infrastructure.csproj" />
+    <Project Path="src/SoftPMS.Persistence/SoftPMS.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/Presentation/">
+    <Project Path="src/SoftPMS.WebApi/SoftPMS.WebApi.csproj" />
+  </Folder>
+</Solution>

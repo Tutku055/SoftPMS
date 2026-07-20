@@ -1,0 +1,6 @@
+@SoftPMS.WebApi_HostAddress = http://localhost:5233
+
+GET {{SoftPMS.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
