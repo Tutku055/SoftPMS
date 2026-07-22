@@ -81,6 +81,7 @@ export const Login = () => {
                 variant="outlined"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
                 required
                 sx={{
                   mb: 2,
@@ -112,6 +113,7 @@ export const Login = () => {
                 variant="outlined"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
                 sx={{ 
                   mb: 4,

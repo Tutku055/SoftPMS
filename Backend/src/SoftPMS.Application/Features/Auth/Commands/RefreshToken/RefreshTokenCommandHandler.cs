@@ -32,10 +32,9 @@ public sealed class RefreshTokenCommandHandler(
 
         // Step 2 — Load the user with the full permission chain (tracking enabled — no AsNoTracking)
         var user = await context.Users
-            .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-                    .ThenInclude(r => r.RolePermissions)
-                        .ThenInclude(rp => rp.Permission)
+            .Include(u => u.Role)
+                .ThenInclude(r => r.RolePermissions)
+                    .ThenInclude(rp => rp.Permission)
             .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, cancellationToken)
             ?? throw new UnauthorizedException("User not found or inactive.");
 
@@ -48,11 +47,10 @@ public sealed class RefreshTokenCommandHandler(
             throw new UnauthorizedException("Refresh token has expired.");
 
         // Step 4 — Build the fresh permissions list from the eagerly-loaded graph
-        var permissions = user.UserRoles
-            .SelectMany(ur => ur.Role.RolePermissions)
+        var permissions = user.Role?.RolePermissions
             .Select(rp => rp.Permission.Name)
             .Distinct()
-            .ToList();
+            .ToList() ?? new List<string>();
 
         // Step 5 — Rotate: generate new token pair and persist
         var newAccessToken = jwtTokenService.GenerateAccessToken(user, permissions);

@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SoftPMS.Application.Common.Models;
 using SoftPMS.Application.DTOs.User;
-using SoftPMS.Application.Features.Users.Commands.AssignRolesToUser;
+using SoftPMS.Application.Features.Users.Commands.AssignRoleToUser;
 using SoftPMS.Application.Features.Users.Commands.CreateUser;
 using SoftPMS.Application.Features.Users.Commands.DeleteUser;
 using SoftPMS.Application.Features.Users.Commands.UpdateUser;
 using SoftPMS.Application.Features.Users.Queries.GetUserById;
 using SoftPMS.Application.Features.Users.Queries.GetUsers;
+using SoftPMS.Application.Features.Users.Queries.GetUsersWithPagination;
 using SoftPMS.WebApi.Authorization;
 
 namespace SoftPMS.WebApi.Controllers;
@@ -21,6 +23,15 @@ public sealed class UsersController : ApiControllerBase
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         return Ok(await Sender.Send(new GetUsersQuery(), ct));
+    }
+
+    /// <summary>Get a paginated, filtered list of users.</summary>
+    [HttpPost("search")]
+    [HasPermission("Users.Read")]
+    [ProducesResponseType(typeof(PaginatedList<UserDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Search([FromBody] GetUsersWithPaginationQuery query, CancellationToken ct)
+    {
+        return Ok(await Sender.Send(query, ct));
     }
 
     /// <summary>Get a single user by ID.</summary>
@@ -68,20 +79,32 @@ public sealed class UsersController : ApiControllerBase
     }
 
     /// <summary>Replace the complete role set for a user.</summary>
-    [HttpPut("{id:guid}/roles")]
+    [HttpPut("{id:guid}/role")]
     [HasPermission("Users.Update")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> AssignRoles(
+    public async Task<IActionResult> AssignRole(
         Guid id,
-        [FromBody] AssignRolesRequest request,
+        [FromBody] SoftPMS.Application.DTOs.Users.AssignRoleRequestDto request,
         CancellationToken ct)
     {
-        await Sender.Send(new AssignRolesToUserCommand(id, request.RoleIds), ct);
+        await Sender.Send(new AssignRoleToUserCommand(id, request.RoleId), ct);
+        return NoContent();
+    }
+
+    /// <summary>Change a user's password.</summary>
+    [HttpPost("{id:guid}/change-password")]
+    [HasPermission("Users.ChangePassword")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ChangePassword(
+        Guid id,
+        [FromBody] SoftPMS.Application.DTOs.Users.ChangePasswordRequestDto request,
+        CancellationToken ct)
+    {
+        await Sender.Send(new Application.Features.Users.Commands.ChangePassword.ChangePasswordCommand(id, request.OldPassword, request.NewPassword), ct);
         return NoContent();
     }
 }
-
-/// <summary>Request body for the assign-roles endpoint.</summary>
-public sealed record AssignRolesRequest(List<Guid> RoleIds);

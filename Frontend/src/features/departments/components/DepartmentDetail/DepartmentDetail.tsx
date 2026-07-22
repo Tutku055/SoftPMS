@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDepartmentDetail } from '../../hooks/useDepartmentDetail';
 import { useUpdateDepartment } from '../../hooks/useUpdateDepartment';
 import { useDeleteDepartment } from '../../hooks/useDeleteDepartment';
+import { useAuthStore } from '../../../../store/useAuthStore';
 import { useEmployees } from '../../../employees/hooks/useEmployees';
 import { useDocuments, useUploadDocument } from '../../../documents/hooks/useDocuments';
 import { DataTable } from '../../../../components/DataTable/DataTable';
@@ -108,6 +109,8 @@ export const DepartmentDetail = () => {
   const { mutate: deleteDepartment, isPending: isDeleting } = useDeleteDepartment();
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  const hasPermission = useAuthStore((state) => state.hasPermission);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
@@ -270,16 +273,18 @@ export const DepartmentDetail = () => {
         </Stack>
 
         <Stack direction="row" spacing={1.5}>
-          <Button 
-            onClick={() => setIsDeleteDialogOpen(true)}
-            variant="outlined" 
-            color="error"
-            startIcon={<DeleteRounded />} 
-            sx={{ borderRadius: '10px', fontWeight: 600, textTransform: 'none' }}
-          >
-            Delete
-          </Button>
-          <Button onClick={handleSave} disabled={isUpdatingDepartment} variant="contained" startIcon={<SaveRounded />} sx={{ borderRadius: '10px', fontWeight: 600, textTransform: 'none', boxShadow: 'none' }}>
+          {hasPermission('Departments.Delete') && (
+            <Button 
+              onClick={() => setIsDeleteDialogOpen(true)}
+              variant="outlined" 
+              color="error"
+              startIcon={<DeleteRounded />} 
+              sx={{ borderRadius: '10px', fontWeight: 600, textTransform: 'none' }}
+            >
+              Delete
+            </Button>
+          )}
+          <Button onClick={handleSave} disabled={isUpdatingDepartment || !hasPermission('Departments.Update')} variant="contained" startIcon={<SaveRounded />} sx={{ borderRadius: '10px', fontWeight: 600, textTransform: 'none', boxShadow: 'none' }}>
             {isUpdatingDepartment ? 'Saving...' : 'Save Changes'}
           </Button>
         </Stack>
@@ -510,7 +515,7 @@ export const DepartmentDetail = () => {
                     const isMissing = params.value === false;
                     
                     return (
-                      <Stack direction="row" spacing={1} alignItems="center">
+                      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                         {isMissing ? (
                           <Tooltip title="Missing on Disk" placement="top">
                             <Chip 

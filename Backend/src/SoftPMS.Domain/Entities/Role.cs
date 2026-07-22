@@ -6,8 +6,10 @@ public class Role: BaseEntity
 
     public string Description { get; set; } = string.Empty;
 
+    public string Color { get; set; } = string.Empty;
+
     // Navigation properties
-    public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
+    public virtual ICollection<User> Users { get; set; } = new HashSet<User>();
 
     public virtual ICollection<RolePermission> RolePermissions { get; set; } = new HashSet<RolePermission>();
 }

@@ -16,6 +16,7 @@ public sealed class GetRolesQueryHandler(
     {
         return await context.Roles
             .AsNoTracking()
+            .Where(r => r.Name != "SuperAdmin")
             .ProjectTo<RoleDto>(mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
     }

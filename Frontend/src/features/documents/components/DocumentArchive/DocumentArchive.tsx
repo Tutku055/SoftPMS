@@ -41,6 +41,7 @@ import type {
 import { DataTable } from '../../../../components/DataTable/DataTable';
 import type { CustomFilterValue, DataTableColumnDef } from '../../../../components/DataTable/DataTable';
 import { useDocuments } from '../../hooks/useDocuments';
+import { useAuthStore } from '../../../../store/useAuthStore';
 import { parseDocumentFilters } from '../../utils/filterUtils';
 import { documentsApi } from '../../api/documentsApi';
 
@@ -69,6 +70,8 @@ export const DocumentArchive = () => {
   const navigate = useNavigate();
   const [quickSearch, setQuickSearch] = useState('');
   const [debouncedQuickSearch, setDebouncedQuickSearch] = useState('');
+  
+  const hasPermission = useAuthStore((state) => state.hasPermission);
   const [selectedOwnerModule, setSelectedOwnerModule] = useState<string>('');
   const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilter>('all');
 
@@ -316,7 +319,7 @@ export const DocumentArchive = () => {
         const isMissing = params.value === false;
         
         return (
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             {isMissing ? (
               <Tooltip title="Missing on Disk" placement="top">
                 <Chip 
@@ -383,21 +386,23 @@ export const DocumentArchive = () => {
             </Select>
           </FormControl>
           
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={<AutoAwesomeRounded />}
-            onClick={handleCheckIntegrity}
-            disabled={isCheckingIntegrity}
-            sx={{
-              borderRadius: '10px',
-              fontWeight: 600,
-              textTransform: 'none',
-              boxShadow: 'none'
-            }}
-          >
-            Check Integrity
-          </Button>
+          {hasPermission('Documents.Update') && (
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<AutoAwesomeRounded />}
+              onClick={handleCheckIntegrity}
+              disabled={isCheckingIntegrity}
+              sx={{
+                borderRadius: '10px',
+                fontWeight: 600,
+                textTransform: 'none',
+                boxShadow: 'none'
+              }}
+            >
+              Check Integrity
+            </Button>
+          )}
 
           <Tooltip title="Manage Columns" arrow>
             <Button

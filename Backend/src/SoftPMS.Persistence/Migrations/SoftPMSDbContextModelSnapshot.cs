@@ -446,6 +446,10 @@ namespace SoftPMS.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -503,6 +507,12 @@ namespace SoftPMS.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSystemUser")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -512,6 +522,12 @@ namespace SoftPMS.Persistence.Migrations
 
                     b.Property<DateTime?>("RefreshTokenExpiryTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("RequiresPasswordChange")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -528,26 +544,13 @@ namespace SoftPMS.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("[EmployeeId] IS NOT NULL");
 
+                    b.HasIndex("RoleId");
+
                     b.HasIndex("Username")
                         .IsUnique()
                         .HasDatabaseName("IX_Users_Username");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("SoftPMS.Domain.Entities.UserRole", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("UserRoles");
                 });
 
             modelBuilder.Entity("SoftPMS.Domain.Entities.Document", b =>
@@ -665,26 +668,15 @@ namespace SoftPMS.Persistence.Migrations
                         .HasForeignKey("SoftPMS.Domain.Entities.User", "EmployeeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("SoftPMS.Domain.Entities.UserRole", b =>
-                {
                     b.HasOne("SoftPMS.Domain.Entities.Role", "Role")
-                        .WithMany("UserRoles")
+                        .WithMany("Users")
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("SoftPMS.Domain.Entities.User", "User")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Employee");
 
                     b.Navigation("Role");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SoftPMS.Domain.Entities.Department", b =>
@@ -714,7 +706,7 @@ namespace SoftPMS.Persistence.Migrations
                 {
                     b.Navigation("RolePermissions");
 
-                    b.Navigation("UserRoles");
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("SoftPMS.Domain.Entities.User", b =>
@@ -726,8 +718,6 @@ namespace SoftPMS.Persistence.Migrations
                     b.Navigation("CreatedEmployees");
 
                     b.Navigation("CreatedNotes");
-
-                    b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
         }

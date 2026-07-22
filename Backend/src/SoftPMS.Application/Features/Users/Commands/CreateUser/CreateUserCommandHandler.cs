@@ -24,6 +24,13 @@ public sealed class CreateUserCommandHandler(
         if (exists)
             throw new Domain.Exceptions.DomainException($"Email '{request.Dto.Email}' is already taken.");
 
+        var role = await context.Roles.FirstOrDefaultAsync(r => r.Id == request.Dto.RoleId, cancellationToken);
+        if (role == null)
+            throw new Domain.Exceptions.NotFoundException(nameof(Role), request.Dto.RoleId);
+        
+        if (role.Name == "SuperAdmin")
+            throw new Domain.Exceptions.DomainException("Users cannot be created with the Super Admin role.");
+
         var user = new User
         {
             Id = Guid.NewGuid(),
@@ -31,6 +38,7 @@ public sealed class CreateUserCommandHandler(
             Username = request.Dto.Username,
             Email = request.Dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Dto.Password),
+            RoleId = request.Dto.RoleId,
             IsActive = request.Dto.IsActive
         };
 

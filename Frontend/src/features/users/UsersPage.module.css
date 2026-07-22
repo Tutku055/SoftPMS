@@ -1,0 +1,137 @@
+/* UsersPage.module.css */
+
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.pageTitle {
+  font-weight: 700 !important; 
+  letter-spacing: -0.02em !important;
+  color: var(--mui-palette-text-primary);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.glassPanel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
+  transition: box-shadow 0.3s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .glassPanel {
+    background: rgba(24, 24, 24, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.searchGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.premiumInput :global(.MuiOutlinedInput-root) {
+  background: var(--mui-palette-background-paper);
+  border-radius: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+@media (prefers-color-scheme: dark) {
+  .premiumInput :global(.MuiOutlinedInput-root) {
+    background: rgba(18, 18, 18, 0.6);
+  }
+}
+
+.premiumInput :global(.MuiOutlinedInput-root:hover) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  .premiumInput :global(.MuiOutlinedInput-root:hover) {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.premiumInput :global(.MuiOutlinedInput-notchedOutline) {
+  border-color: rgba(128, 128, 128, 0.2) !important;
+}
+
+.premiumInput :global(.Mui-focused .MuiOutlinedInput-notchedOutline) {
+  border-color: var(--mui-palette-primary-main) !important;
+  border-width: 1px !important;
+}
+
+.premiumInput :global(.Mui-focused.MuiOutlinedInput-root) {
+  box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.1);
+}
+
+.inputIcon {
+  color: var(--mui-palette-text-secondary);
+  font-size: 1.1rem;
+}
+
+.quickFilterChip {
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(128, 128, 128, 0.15) !important;
+  background: transparent !important;
+  transition: all 0.2s ease !important;
+}
+
+.quickFilterChip:hover {
+  background: rgba(128, 128, 128, 0.06) !important;
+  border-color: rgba(128, 128, 128, 0.3) !important;
+}
+
+.chipActive {
+  background: var(--mui-palette-text-primary) !important;
+  color: var(--mui-palette-background-paper) !important;
+  border-color: var(--mui-palette-text-primary) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+.chipActive:hover {
+  background: rgba(0, 0, 0, 0.85) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .chipActive:hover {
+    background: rgba(255, 255, 255, 0.85) !important;
+  }
+}
+
+.actionButton {
+  border-radius: 10px !important;
+  border-color: rgba(128, 128, 128, 0.25) !important;
+  color: var(--mui-palette-text-primary) !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  background: transparent !important;
+  transition: all 0.2s ease !important;
+}
+
+.actionButton:hover {
+  background: rgba(128, 128, 128, 0.06) !important;
+  border-color: rgba(128, 128, 128, 0.5) !important;
+}
+
+.tableWrapper {
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--mui-palette-background-paper);
+  border: 1px solid rgba(128, 128, 128, 0.15);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
+}

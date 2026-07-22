@@ -16,6 +16,7 @@ interface CurrentUser {
   id: string;
   email: string;
   username: string;
+  requiresPasswordChange?: boolean;
 }
 
 interface AuthState {
@@ -24,7 +25,7 @@ interface AuthState {
   permissions: string[];
   currentUser: CurrentUser | null;
   isAuthenticated: boolean;
-  login: (accessToken: string, refreshToken: string, userData?: { username: string, email: string }) => void;
+  login: (accessToken: string, refreshToken: string, userData?: { username: string, email: string, requiresPasswordChange?: boolean }) => void;
   logout: () => void;
   hasPermission: (permission: string) => boolean;
 }
@@ -38,7 +39,7 @@ export const useAuthStore = create<AuthState>()(
       currentUser: null,
       isAuthenticated: false,
 
-      login: (accessToken: string, refreshToken: string, userData?: { username: string, email: string }) => {
+      login: (accessToken: string, refreshToken: string, userData?: { username: string, email: string, requiresPasswordChange?: boolean }) => {
         try {
           const decoded = jwtDecode<DecodedToken>(accessToken);
           
@@ -53,11 +54,13 @@ export const useAuthStore = create<AuthState>()(
           const userEmail = userData?.email || decoded.email || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || '';
           const userName = userData?.username || decoded.username || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || '';
 
+          const isPasswordChangeForced = userData?.requiresPasswordChange ?? (parsedPermissions.includes('Users.ChangePassword') && !parsedPermissions.includes('Dashboard.Read'));
+
           set({
             accessToken,
             refreshToken,
             permissions: parsedPermissions,
-            currentUser: decoded.sub ? { id: decoded.sub, email: userEmail, username: userName } : null,
+            currentUser: decoded.sub ? { id: decoded.sub, email: userEmail, username: userName, requiresPasswordChange: isPasswordChangeForced } : null,
             isAuthenticated: true,
           });
         } catch (error) {
@@ -80,7 +83,6 @@ export const useAuthStore = create<AuthState>()(
             const rawPerms = decoded.permission ?? decoded.permissions ?? decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/permission'];
             if (rawPerms) {
               perms = Array.isArray(rawPerms) ? rawPerms : [rawPerms];
-              set({ permissions: perms });
             }
           } catch {
             // ignore

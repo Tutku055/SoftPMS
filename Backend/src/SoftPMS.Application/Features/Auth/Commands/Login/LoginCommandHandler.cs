@@ -19,21 +19,21 @@ public sealed class LoginCommandHandler(
     public async Task<LoginResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         var user = await context.Users
-            .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-                    .ThenInclude(r => r.RolePermissions)
-                        .ThenInclude(rp => rp.Permission)
+            .Include(u => u.Role)
+                .ThenInclude(r => r.RolePermissions)
+                    .ThenInclude(rp => rp.Permission)
             .FirstOrDefaultAsync(u => u.Username == request.Username && u.IsActive, cancellationToken)
             ?? throw new NotFoundException(nameof(Domain.Entities.User), request.Username);
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new DomainException("Invalid credentials.");
 
-        var permissions = user.UserRoles
-            .SelectMany(ur => ur.Role.RolePermissions)
-            .Select(rp => rp.Permission.Name)
-            .Distinct()
-            .ToList();
+        var permissions = user.RequiresPasswordChange 
+            ? new List<string> { "Users.ChangePassword", "Users.Read" }
+            : user.Role?.RolePermissions
+                .Select(rp => rp.Permission.Name)
+                .Distinct()
+                .ToList() ?? new List<string>();
 
         var accessToken = jwtTokenService.GenerateAccessToken(user, permissions);
         var refreshToken = jwtTokenService.GenerateRefreshToken();
@@ -47,6 +47,6 @@ public sealed class LoginCommandHandler(
         // Use the service to get the correct expiry — avoids hardcoding or drift from JwtSettings
         var tokenExpiration = jwtTokenService.GetAccessTokenExpiry(dateTime.UtcNow);
 
-        return new LoginResponseDto(accessToken, refreshToken, tokenExpiration, user.Username, user.Email);
+        return new LoginResponseDto(accessToken, refreshToken, tokenExpiration, user.Username, user.Email, user.RequiresPasswordChange);
     }
 }

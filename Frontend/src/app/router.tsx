@@ -11,15 +11,31 @@ import { DepartmentDetail } from '../features/departments/components/DepartmentD
 import { DepartmentEmployees } from '../features/departments/components/DepartmentEmployees/DepartmentEmployees';
 import { DocumentArchive } from '../features/documents/components/DocumentArchive/DocumentArchive';
 import { DocumentDetail } from '../features/documents/components/DocumentDetail/DocumentDetail';
+import { UsersPage } from '../features/users/UsersPage';
+import { UserDetail } from '../features/users/UserDetail';
 
 const RolesList = () => <div>RolesList</div>;
-const UsersList = () => <div>UsersList</div>;
+
+import { useLocation } from 'react-router-dom';
 
 const PrivateRoute = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const location = useLocation();
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  const isPasswordChangeRequired = currentUser?.requiresPasswordChange || 
+    (useAuthStore.getState().permissions.includes('Users.ChangePassword') && !useAuthStore.getState().permissions.includes('Dashboard.Read'));
+
+  if (isPasswordChangeRequired && currentUser?.id) {
+    const requiredPath = `/users/${currentUser.id}`;
+    const settingsRequiredPath = `/settings/users/${currentUser.id}`;
+    if (location.pathname !== requiredPath && location.pathname !== settingsRequiredPath) {
+      return <Navigate to={requiredPath} replace />;
+    }
   }
 
   return <Outlet />;
@@ -83,7 +99,19 @@ export const router = createBrowserRouter([
           },
           {
             path: 'users',
-            element: <UsersList />,
+            element: <UsersPage />,
+          },
+          {
+            path: 'settings/users',
+            element: <UsersPage />,
+          },
+          {
+            path: 'users/:id',
+            element: <UserDetail />,
+          },
+          {
+            path: 'settings/users/:id',
+            element: <UserDetail />,
           }
         ]
       }

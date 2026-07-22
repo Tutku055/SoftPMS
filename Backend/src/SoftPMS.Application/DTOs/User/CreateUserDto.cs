@@ -7,5 +7,6 @@ public record CreateUserDto(
     string Username,
     string Email,
     string Password,
+    Guid RoleId,
     bool IsActive
 );

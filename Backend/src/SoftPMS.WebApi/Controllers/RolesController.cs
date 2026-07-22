@@ -75,13 +75,10 @@ public sealed class RolesController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AssignPermissions(
         Guid id,
-        [FromBody] AssignPermissionsRequest request,
+        [FromBody] AssignPermissionsRequestDto request,
         CancellationToken ct)
     {
         await Sender.Send(new AssignPermissionsToRoleCommand(id, request.PermissionIds), ct);
         return NoContent();
     }
 }
-
-/// <summary>Request body for the assign-permissions endpoint.</summary>
-public sealed record AssignPermissionsRequest(List<Guid> PermissionIds);

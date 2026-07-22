@@ -5,5 +5,6 @@ public record LoginResponseDto(
     string RefreshToken,
     DateTime AccessTokenExpiration,
     string Username,
-    string Email
+    string Email,
+    bool RequiresPasswordChange
 );

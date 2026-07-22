@@ -3,6 +3,7 @@ export interface LoginResponse {
   refreshToken: string;
   username: string;
   email: string;
+  requiresPasswordChange?: boolean;
 }
 
 export interface LoginCredentials {

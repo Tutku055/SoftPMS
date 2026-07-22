@@ -16,11 +16,12 @@ public sealed class GetUserByIdQueryHandler(
     public async Task<UserDto> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
         var user = await context.Users
+            .Include(u => u.Role)
+            .Include(u => u.Employee)
             .AsNoTracking()
-            .ProjectTo<UserDto>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(u => u.Id == request.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(Domain.Entities.User), request.Id);
 
-        return user;
+        return mapper.Map<UserDto>(user);
     }
 }

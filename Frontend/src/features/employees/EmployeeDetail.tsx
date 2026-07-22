@@ -6,6 +6,7 @@ import { useUpdateEmployee } from './hooks/useUpdateEmployee';
 import { useUpdateEmployeeAddress } from './hooks/useUpdateEmployeeAddress';
 import { useDepartments } from './hooks/useDepartments';
 import { useDocuments } from '../documents/hooks/useDocuments';
+import { useAuthStore } from '../../store/useAuthStore';
 import { documentsApi } from '../documents/api/documentsApi';
 import type { GridPaginationModel } from '@mui/x-data-grid';
 import { DataTable } from '../../components/DataTable/DataTable';
@@ -128,6 +129,8 @@ export const EmployeeDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
+  
+  const hasPermission = useAuthStore((state) => state.hasPermission);
 
   const { data: employee, isLoading, isError } = useEmployeeDetail(id);
   const { mutate: updateEmployee, isPending: isUpdatingEmployee } = useUpdateEmployee();
@@ -384,10 +387,10 @@ export const EmployeeDetail = () => {
         </Stack>
 
         <Stack direction="row" spacing={1.5}>
-          <Button onClick={handleTerminate} disabled={isUpdatingEmployee || isUpdatingAddress || formState.employmentStatus === 3} variant="outlined" color="error" startIcon={<PersonRemoveRounded />} sx={actionButtonSx}>
+          <Button onClick={handleTerminate} disabled={isUpdatingEmployee || isUpdatingAddress || formState.employmentStatus === 3 || !hasPermission('Employees.Update')} variant="outlined" color="error" startIcon={<PersonRemoveRounded />} sx={actionButtonSx}>
             {formState.employmentStatus === 3 ? 'Terminated' : 'Terminate'}
           </Button>
-          <Button onClick={handleSave} disabled={isUpdatingEmployee || isUpdatingAddress} variant="contained" startIcon={<SaveRounded />} sx={{ borderRadius: '10px', fontWeight: 600, textTransform: 'none', boxShadow: 'none' }}>
+          <Button onClick={handleSave} disabled={isUpdatingEmployee || isUpdatingAddress || !hasPermission('Employees.Update')} variant="contained" startIcon={<SaveRounded />} sx={{ borderRadius: '10px', fontWeight: 600, textTransform: 'none', boxShadow: 'none' }}>
             {isUpdatingEmployee || isUpdatingAddress ? 'Saving...' : 'Save Changes'}
           </Button>
         </Stack>
@@ -664,7 +667,7 @@ export const EmployeeDetail = () => {
                     const isMissing = params.value === false;
                     
                     return (
-                      <Stack direction="row" spacing={1} alignItems="center">
+                      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                         {isMissing ? (
                           <Tooltip title="Missing on Disk" placement="top">
                             <Chip 

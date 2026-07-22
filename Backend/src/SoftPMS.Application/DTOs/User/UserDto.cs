@@ -7,5 +7,7 @@ public record UserDto(
     Guid? EmployeeId,
     string Username,
     string Email,
-    bool IsActive
+    bool IsActive,
+    bool IsSystemUser,
+    SoftPMS.Application.DTOs.Role.RoleDto? Role
 );

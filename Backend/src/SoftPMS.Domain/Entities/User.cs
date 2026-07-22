@@ -16,10 +16,16 @@ public class User : BaseEntity
 
     public DateTime? RefreshTokenExpiryTime { get; set; }
 
+    public bool RequiresPasswordChange { get; set; } = false;
+
+    public bool IsSystemUser { get; set; } = false;
+
+    public Guid RoleId { get; set; }
+
     // Navigation properties
     public virtual Employee? Employee { get; set; }
 
-    public virtual ICollection<UserRole> UserRoles { get; set; } = new HashSet<UserRole>();
+    public virtual Role Role { get; set; } = null!;
 
     public virtual ICollection<Employee> CreatedEmployees { get; set; } = new HashSet<Employee>();
 
@@ -28,5 +34,7 @@ public class User : BaseEntity
     public virtual ICollection<Document> CreatedDocuments { get; set; } = new HashSet<Document>();
 
     public virtual ICollection<EmployeeNote> CreatedNotes { get; set; } = new HashSet<EmployeeNote>();
+
+    public bool IsDeleted { get; set; } = false;
 }
 

@@ -11,8 +11,17 @@ export const useLogin = () => {
   return useMutation<LoginResponse, Error, LoginCredentials>({
     mutationFn: login,
     onSuccess: (data) => {
-      loginAction(data.accessToken, data.refreshToken, { username: data.username, email: data.email });
-      navigate('/');
+      loginAction(data.accessToken, data.refreshToken, { 
+        username: data.username, 
+        email: data.email, 
+        requiresPasswordChange: data.requiresPasswordChange 
+      });
+      const currentUser = useAuthStore.getState().currentUser;
+      if (data.requiresPasswordChange && currentUser?.id) {
+        navigate(`/users/${currentUser.id}`);
+      } else {
+        navigate('/');
+      }
     },
   });
 };

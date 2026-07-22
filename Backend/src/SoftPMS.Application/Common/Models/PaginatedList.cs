@@ -16,12 +16,17 @@ public sealed class PaginatedList<T>
     public bool HasPreviousPage => PageNumber > 1;
     public bool HasNextPage => PageNumber < TotalPages;
 
-    private PaginatedList(IReadOnlyList<T> items, int totalCount, int pageNumber, int pageSize)
+    public PaginatedList(IReadOnlyList<T> items, int totalCount, int pageNumber, int pageSize)
     {
         Items = items;
         TotalCount = totalCount;
         PageNumber = pageNumber;
         TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+    }
+
+    public static PaginatedList<T> Create(IReadOnlyList<T> items, int totalCount, int pageNumber, int pageSize)
+    {
+        return new PaginatedList<T>(items, totalCount, pageNumber, pageSize);
     }
 
     /// <summary>

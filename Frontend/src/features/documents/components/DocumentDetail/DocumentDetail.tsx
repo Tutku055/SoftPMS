@@ -281,7 +281,7 @@ export const DocumentDetail = () => {
           >
             Download File
           </Button>
-          <Button onClick={handleSave} disabled={isUpdating} variant="contained" startIcon={<SaveRounded />} sx={{ borderRadius: '10px', fontWeight: 600, textTransform: 'none', boxShadow: 'none' }}>
+          <Button onClick={handleSave} disabled={isUpdating || !hasPermission('Documents.Update')} variant="contained" startIcon={<SaveRounded />} sx={{ borderRadius: '10px', fontWeight: 600, textTransform: 'none', boxShadow: 'none' }}>
             {isUpdating ? 'Saving...' : 'Save Changes'}
           </Button>
         </Stack>

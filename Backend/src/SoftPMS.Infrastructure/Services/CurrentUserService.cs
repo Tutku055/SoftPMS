@@ -13,8 +13,9 @@ public sealed class CurrentUserService(IHttpContextAccessor httpContextAccessor)
     {
         get
         {
-            // The JWT middleware maps the 'sub' claim to ClaimTypes.NameIdentifier automatically.
-            var value = Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var value = Principal?.FindFirstValue(ClaimTypes.NameIdentifier)
+                     ?? Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                     ?? Principal?.FindFirstValue("sub");
             return Guid.TryParse(value, out var id) ? id : Guid.Empty;
         }
     }

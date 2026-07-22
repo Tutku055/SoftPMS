@@ -32,5 +32,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         // EmployeeId is an optional FK linking the user to an employee record
         builder.Property(u => u.EmployeeId)
             .IsRequired(false);
+
+        // Map Role
+        builder.HasOne(u => u.Role)
+            .WithMany(r => r.Users)
+            .HasForeignKey(u => u.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Soft Delete Query Filter
+        builder.HasQueryFilter(u => !u.IsDeleted);
     }
 }

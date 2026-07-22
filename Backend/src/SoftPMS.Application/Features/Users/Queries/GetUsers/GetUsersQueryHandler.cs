@@ -14,9 +14,12 @@ public sealed class GetUsersQueryHandler(
 {
     public async Task<IEnumerable<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
-        return await context.Users
+        var users = await context.Users
+            .Include(u => u.Role)
+            .Include(u => u.Employee)
             .AsNoTracking()
-            .ProjectTo<UserDto>(mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
+
+        return mapper.Map<IEnumerable<UserDto>>(users);
     }
 }

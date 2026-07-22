@@ -21,7 +21,13 @@ export const Topbar: React.FC = () => {
   const isDarkMode = mode === 'dark';
 
   const currentUser = useAuthStore((state) => state.currentUser);
+  const permissions = useAuthStore((state) => state.permissions);
   const displayName = currentUser?.username || 'User';
+  
+  const isPasswordChangeRequired = currentUser?.requiresPasswordChange || 
+    (permissions.includes('Users.ChangePassword') && !permissions.includes('Dashboard.Read'));
+
+  const currentDrawerWidth = isPasswordChangeRequired ? 0 : drawerWidth;
 
   return (
     <AppBar
@@ -29,14 +35,14 @@ export const Topbar: React.FC = () => {
       elevation={0}
       className={styles.appBar}
       sx={{
-        width: { sm: `calc(100% - ${drawerWidth}px)` },
-        ml: { sm: `${drawerWidth}px` },
+        width: { sm: `calc(100% - ${currentDrawerWidth}px)` },
+        ml: { sm: `${currentDrawerWidth}px` },
         backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(31, 41, 55, 0.85)' : 'rgba(255, 255, 255, 0.85)',
         backdropFilter: 'blur(8px)',
         color: 'text.primary',
         borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
         borderRadius: 0,
-        transition: 'background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s, width 0.3s',
       }}
     >
       <Toolbar sx={{ minHeight: '70px !important' }}>

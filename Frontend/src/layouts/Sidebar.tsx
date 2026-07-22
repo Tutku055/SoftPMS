@@ -5,8 +5,8 @@ import {
   Toolbar, Box, Typography, Collapse
 } from '@mui/material';
 import { 
-  Dashboard, PeopleAlt, FolderCopy, AccountBalance, 
-  Psychology, Settings, ExpandLess, ExpandMore, Business 
+  Dashboard, PeopleAlt, FolderCopy, 
+  Settings, ExpandLess, ExpandMore, Business 
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './Sidebar.module.css';
@@ -17,6 +17,7 @@ import logoImg from '../assets/images/SoftPMSLogo.png';
 interface SubMenuItem {
   title: string;
   path: string;
+  permission?: string;
 }
 
 interface MenuItem {
@@ -24,6 +25,7 @@ interface MenuItem {
   path?: string; // Ana menüde direkt link varsa
   icon: ReactNode;
   children?: SubMenuItem[]; // Alt menüsü olanlar için
+  permission?: string;
 }
 
 // -----------------------------------------
@@ -35,73 +37,81 @@ const menuConfig: MenuItem[] = [
   { 
     title: 'Dashboard', 
     path: '/dashboard', 
-    icon: <Dashboard /> 
+    icon: <Dashboard />,
+    permission: 'Dashboard.Read'
   },
   { 
     title: 'Personnel Operations', 
     icon: <PeopleAlt />,
     children: [
-      { title: 'Roster', path: '/employees/roster' },
-      { title: 'Create Employee', path: '/employees/create' },
-      { title: 'Time & Attendance', path: '/employees/time-tracking' },
-      { title: 'Notes & References', path: '/employees/notes' }
+      { title: 'Roster', path: '/employees/roster', permission: 'Employees.Read' },
+      { title: 'Create Employee', path: '/employees/create', permission: 'Employees.Create' },
+      { title: 'Time & Attendance', path: '/employees/time-tracking', permission: 'Employees.Read' },
+      { title: 'Notes & References', path: '/employees/notes', permission: 'Employees.Read' }
     ]
   },
   { 
     title: 'Departments', 
     icon: <Business />,
     children: [
-      { title: 'Department List', path: '/departments/list' },
-      { title: 'Department Employees', path: '/departments/employees' }
+      { title: 'Department List', path: '/departments/list', permission: 'Departments.Read' },
+      { title: 'Department Employees', path: '/departments/employees', permission: 'Departments.Read' }
     ]
   },
   { 
     title: 'Documents & Records', 
     icon: <FolderCopy />,
     children: [
-      { title: 'Document Archive', path: '/documents/archive' },
-      { title: 'Process Tracking', path: '/documents/tracking' }
-    ]
-  },
-  { 
-    title: 'Financial Management', 
-    icon: <AccountBalance />,
-    children: [
-      { title: 'Salary & Pay Grade', path: '/finance/salary' },
-      { title: 'Cost Analysis', path: '/finance/analytics' }
-    ]
-  },
-  { 
-    title: 'AI Analytics & Prediction', 
-    icon: <Psychology />,
-    children: [
-      { title: 'Anomaly Analysis (ML)', path: '/ai/anomaly' },
-      { title: 'Turnover Risk', path: '/ai/turnover-risk' }
+      { title: 'Document Archive', path: '/documents/archive', permission: 'Documents.Read' },
+      { title: 'Process Tracking', path: '/documents/tracking', permission: 'Documents.Read' }
     ]
   },
   { 
     title: 'System Settings', 
     icon: <Settings />,
     children: [
-      { title: 'Users', path: '/settings/users' },
-      { title: 'Roles & Permissions', path: '/settings/roles' }
+      { title: 'Users', path: '/settings/users', permission: 'Users.Read' },
+      { title: 'Roles & Permissions', path: '/settings/roles', permission: 'Roles.Read' }
     ]
   }
 ];
 
+import { useAuthStore } from '../store/useAuthStore';
+
 export const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+  const hasPermission = useAuthStore(state => state.hasPermission);
+  const currentUser = useAuthStore(state => state.currentUser);
+  const permissions = useAuthStore(state => state.permissions);
+
+  const isPasswordChangeRequired = currentUser?.requiresPasswordChange || 
+    (permissions.includes('Users.ChangePassword') && !permissions.includes('Dashboard.Read'));
+
   // Alt menülerin açık/kapalı state'ini tutan obje (Type: Record<string, boolean>)
   const [openStates, setOpenStates] = useState<Record<string, boolean>>({});
+
+  if (isPasswordChangeRequired) {
+    return null;
+  }
 
   const handleToggle = (title: string) => {
     setOpenStates((prev) => ({ ...prev, [title]: !prev[title] }));
   };
 
   const renderMenuItem = (item: MenuItem) => {
-    const hasChildren = item.children && item.children.length > 0;
+    if (item.permission && !hasPermission(item.permission)) {
+      return null;
+    }
+
+    const visibleChildren = item.children?.filter(child => !child.permission || hasPermission(child.permission)) || [];
+    
+    // If it's a folder (has children defined) but none of the children are visible, hide the entire folder
+    if (item.children && item.children.length > 0 && visibleChildren.length === 0) {
+      return null;
+    }
+
+    const hasChildren = visibleChildren.length > 0;
     
     // Alt menüsü yoksa ve path eşleşiyorsa ana menü aktiftir
     const isActive = !hasChildren && item.path && location.pathname.startsWith(item.path);
@@ -149,10 +159,10 @@ export const Sidebar: React.FC = () => {
           </ListItemButton>
         </ListItem>
 
-        {hasChildren && item.children && (
+        {hasChildren && (
           <Collapse in={isOpen} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              {item.children.map((child) => {
+              {visibleChildren.map((child) => {
                 const isChildActive = location.pathname === child.path;
                 return (
                   <ListItemButton
