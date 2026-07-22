@@ -3,7 +3,7 @@ using SoftPMS.Application.DTOs.Department;
 using SoftPMS.Application.DTOs.Employee;
 using SoftPMS.Application.DTOs.EmployeeAddress;
 using SoftPMS.Application.DTOs.EmployeeCompensation;
-using SoftPMS.Application.DTOs.EmployeeDocument;
+using SoftPMS.Application.DTOs.Document;
 using SoftPMS.Application.DTOs.EmployeeNote;
 using SoftPMS.Application.DTOs.EmployeeReference;
 using SoftPMS.Application.DTOs.Permission;
@@ -62,25 +62,8 @@ public class ApplicationMappingProfile : Profile
             .ForMember(d => d.Employee, o => o.Ignore())
             .ForMember(d => d.CreatedByUser, o => o.Ignore());
 
-        // Employee document mappings
-        CreateMap<EmployeeDocument, EmployeeDocumentDto>()
-            .ForMember(d => d.UploadedAt, o => o.MapFrom(s => s.CreatedAt));
-        CreateMap<CreateEmployeeDocumentDto, EmployeeDocument>()
-            .ForMember(d => d.IssueDate, o => o.Ignore())
-            .ForMember(d => d.ExpiryDate, o => o.Ignore())
-            .ForMember(d => d.ReminderDate, o => o.Ignore())
-            .ForMember(d => d.EmployeeId, o => o.Ignore())
-            .ForMember(d => d.CreatedByUserId, o => o.Ignore())
-            .ForMember(d => d.Employee, o => o.Ignore())
-            .ForMember(d => d.CreatedByUser, o => o.Ignore());
-        CreateMap<UpdateEmployeeDocumentDto, EmployeeDocument>()
-            .ForMember(d => d.Id, o => o.Ignore())
-            .ForMember(d => d.CreatedAt, o => o.Ignore())
-            .ForMember(d => d.EmployeeId, o => o.Ignore())
-            .ForMember(d => d.CreatedByUserId, o => o.Ignore())
-            .ForMember(d => d.Employee, o => o.Ignore())
-            .ForMember(d => d.CreatedByUser, o => o.Ignore());
-
+        // Document mappings
+        CreateMap<Document, DocumentDto>();
         // Employee note mappings
         CreateMap<EmployeeNote, EmployeeNoteDto>();
         CreateMap<CreateEmployeeNoteDto, EmployeeNote>()

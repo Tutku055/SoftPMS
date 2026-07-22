@@ -9,6 +9,8 @@ import { EmployeeCreation } from '../features/employees/EmployeeCreation';
 import { DepartmentList } from '../features/departments/components/DepartmentList/DepartmentList';
 import { DepartmentDetail } from '../features/departments/components/DepartmentDetail/DepartmentDetail';
 import { DepartmentEmployees } from '../features/departments/components/DepartmentEmployees/DepartmentEmployees';
+import { DocumentArchive } from '../features/documents/components/DocumentArchive/DocumentArchive';
+import { DocumentDetail } from '../features/documents/components/DocumentDetail/DocumentDetail';
 
 const RolesList = () => <div>RolesList</div>;
 const UsersList = () => <div>UsersList</div>;
@@ -66,6 +68,14 @@ export const router = createBrowserRouter([
           {
             path: 'departments/:id',
             element: <DepartmentDetail />,
+          },
+          {
+            path: 'documents/archive',
+            element: <DocumentArchive />,
+          },
+          {
+            path: 'documents/:id',
+            element: <DocumentDetail />,
           },
           {
             path: 'roles',

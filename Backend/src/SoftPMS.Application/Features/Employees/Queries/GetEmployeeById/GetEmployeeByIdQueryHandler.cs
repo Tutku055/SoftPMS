@@ -22,7 +22,7 @@ public sealed class GetEmployeeByIdQueryHandler(
             .Include(e => e.Department)
             .Include(e => e.Addresses)
             .Include(e => e.Compensations)
-            .Include(e => e.Documents)
+
             .Include(e => e.Notes)
             .Include(e => e.References)
             .FirstOrDefaultAsync(e => e.Id == request.EmployeeId, cancellationToken)

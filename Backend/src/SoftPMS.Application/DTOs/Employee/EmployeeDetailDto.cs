@@ -2,7 +2,6 @@ using SoftPMS.Domain.Enums;
 using SoftPMS.Application.DTOs.EmployeeAddress;
 using SoftPMS.Application.DTOs.Department;
 using SoftPMS.Application.DTOs.EmployeeCompensation;
-using SoftPMS.Application.DTOs.EmployeeDocument;
 using SoftPMS.Application.DTOs.EmployeeNote;
 using SoftPMS.Application.DTOs.EmployeeReference;
 
@@ -29,7 +28,7 @@ public record EmployeeDetailDto
 
     public List<EmployeeAddressDto> Addresses { get; init; } = new();
     public List<EmployeeCompensationDto> Compensations { get; init; } = new();
-    public List<EmployeeDocumentDto> Documents { get; init; } = new();
+
     public List<EmployeeNoteDto> Notes { get; init; } = new();
     public List<EmployeeReferenceDto> References { get; init; } = new();
 }

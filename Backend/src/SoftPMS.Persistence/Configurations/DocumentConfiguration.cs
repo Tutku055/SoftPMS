@@ -4,9 +4,9 @@ using SoftPMS.Domain.Entities;
 
 namespace SoftPMS.Persistence.Configurations;
 
-public class EmployeeDocumentConfiguration : IEntityTypeConfiguration<EmployeeDocument>
+public class DocumentConfiguration : IEntityTypeConfiguration<Document>
 {
-    public void Configure(EntityTypeBuilder<EmployeeDocument> builder)
+    public void Configure(EntityTypeBuilder<Document> builder)
     {
         builder.HasKey(d => d.Id);
 
@@ -22,13 +22,24 @@ public class EmployeeDocumentConfiguration : IEntityTypeConfiguration<EmployeeDo
             .HasConversion<int>()
             .IsRequired();
 
+        builder.Property(d => d.OwnerModule)
+            .HasConversion<int>()
+            .IsRequired();
+
+        builder.Property(d => d.IsAvailable)
+            .IsRequired()
+            .HasDefaultValue(true);
+
+        builder.Property(d => d.LastCheckedAt)
+            .IsRequired(false);
+
         // FK to creating User — restrict to prevent cascade on user removal
         builder.HasOne(d => d.CreatedByUser)
             .WithMany(u => u.CreatedDocuments)
             .HasForeignKey(d => d.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Global query filter to match Employee soft delete
-        builder.HasQueryFilter(d => !d.Employee.IsDeleted);
+        // Remove the soft delete filter since ReferenceId can belong to any entity,
+        // or apply it carefully. For now, just rely on standard queries.
     }
 }

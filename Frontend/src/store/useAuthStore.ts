@@ -6,6 +6,7 @@ interface DecodedToken {
   sub?: string;
   email?: string;
   username?: string;
+  permission?: string | string[];
   permissions?: string | string[];
   exp?: number;
   [key: string]: any;
@@ -41,11 +42,12 @@ export const useAuthStore = create<AuthState>()(
         try {
           const decoded = jwtDecode<DecodedToken>(accessToken);
           
+          const rawPermissions = decoded.permission ?? decoded.permissions ?? decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/permission'];
           let parsedPermissions: string[] = [];
-          if (decoded.permissions) {
-            parsedPermissions = Array.isArray(decoded.permissions) 
-              ? decoded.permissions 
-              : [decoded.permissions];
+          if (rawPermissions) {
+            parsedPermissions = Array.isArray(rawPermissions) 
+              ? rawPermissions 
+              : [rawPermissions];
           }
 
           const userEmail = userData?.email || decoded.email || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || '';
@@ -69,7 +71,23 @@ export const useAuthStore = create<AuthState>()(
       },
 
       hasPermission: (permission: string) => {
-        return get().permissions.includes(permission);
+        const state = get();
+        let perms = state.permissions;
+
+        if ((!perms || perms.length === 0) && state.accessToken) {
+          try {
+            const decoded = jwtDecode<DecodedToken>(state.accessToken);
+            const rawPerms = decoded.permission ?? decoded.permissions ?? decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/permission'];
+            if (rawPerms) {
+              perms = Array.isArray(rawPerms) ? rawPerms : [rawPerms];
+              set({ permissions: perms });
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        return perms ? perms.includes(permission) : false;
       },
     }),
     {

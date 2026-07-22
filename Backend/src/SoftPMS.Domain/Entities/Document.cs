@@ -2,15 +2,19 @@ using SoftPMS.Domain.Enums;
 
 namespace SoftPMS.Domain.Entities;
 
-public class EmployeeDocument: BaseEntity
+public class Document : BaseEntity
 {
-    public Guid EmployeeId { get; set; }
+    public Guid ReferenceId { get; set; }
+
+    public DocumentModule OwnerModule { get; set; } = DocumentModule.Employee;
 
     public DocumentType DocumentType { get; set; } = DocumentType.Other;
 
     public string FileName { get; set; } = string.Empty;
 
     public string FilePath { get; set; } = string.Empty;
+
+    public long FileSizeBytes { get; set; }
 
     public DateTime? IssueDate { get; set; }
 
@@ -20,8 +24,10 @@ public class EmployeeDocument: BaseEntity
 
     public Guid CreatedByUserId { get; set; }
 
-    // Navigation properties
-    public virtual Employee Employee { get; set; } = null!;
+    public bool IsAvailable { get; set; } = true;
 
+    public DateTime? LastCheckedAt { get; set; }
+
+    // Navigation properties
     public virtual User CreatedByUser { get; set; } = null!;
 }

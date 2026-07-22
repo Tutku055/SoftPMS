@@ -25,7 +25,7 @@ public class User : BaseEntity
 
     public virtual ICollection<EmployeeCompensation> CreatedCompensations { get; set; } = new HashSet<EmployeeCompensation>();
 
-    public virtual ICollection<EmployeeDocument> CreatedDocuments { get; set; } = new HashSet<EmployeeDocument>();
+    public virtual ICollection<Document> CreatedDocuments { get; set; } = new HashSet<Document>();
 
     public virtual ICollection<EmployeeNote> CreatedNotes { get; set; } = new HashSet<EmployeeNote>();
 }

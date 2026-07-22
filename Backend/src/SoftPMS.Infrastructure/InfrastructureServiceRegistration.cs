@@ -23,6 +23,7 @@ public static class InfrastructureServiceRegistration
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IStorageService, LocalFileStorageService>();
         services.AddTransient<IDateTime, DateTimeService>();
 
         return services;

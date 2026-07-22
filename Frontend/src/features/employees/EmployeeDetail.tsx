@@ -5,6 +5,14 @@ import { useEmployeeDetail } from './hooks/useEmployeeDetail';
 import { useUpdateEmployee } from './hooks/useUpdateEmployee';
 import { useUpdateEmployeeAddress } from './hooks/useUpdateEmployeeAddress';
 import { useDepartments } from './hooks/useDepartments';
+import { useDocuments } from '../documents/hooks/useDocuments';
+import { documentsApi } from '../documents/api/documentsApi';
+import type { GridPaginationModel } from '@mui/x-data-grid';
+import { DataTable } from '../../components/DataTable/DataTable';
+import type { CustomFilterValue } from '../../components/DataTable/DataTable';
+import { parseDocumentFilters } from '../documents/utils/filterUtils';
+import { PopupDialog } from '../../components/PopupDialog/PopupDialog';
+
 import {
   Box,
   Typography,
@@ -20,7 +28,16 @@ import {
   IconButton,
   Tooltip,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  LinearProgress,
 } from '@mui/material';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowBackRounded,
   SaveRounded,
@@ -30,6 +47,9 @@ import {
   FolderSharedRounded,
   ContactsRounded,
   OpenInNewRounded,
+  UploadFileRounded,
+  WarningRounded,
+  CheckCircleRounded
 } from '@mui/icons-material';
 import styles from './EmployeeDetail.module.css';
 
@@ -137,6 +157,75 @@ export const EmployeeDetail = () => {
     postalCode: '',
     country: '',
   });
+
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({ page: 0, pageSize: 10 });
+  const [customFilters, setCustomFilters] = useState<Record<string, CustomFilterValue>>({});
+
+  const parsedFilters = parseDocumentFilters(customFilters);
+
+  const { data: documentData, isLoading: documentsLoading } = useDocuments({
+    pageNumber: paginationModel.page + 1,
+    pageSize: paginationModel.pageSize,
+    referenceId: id,
+    ownerModule: 1, // Employee
+    ...parsedFilters,
+  });
+  const documentCount = documentData?.totalCount || 0;
+
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadDocType, setUploadDocType] = useState('1'); // Default: Identification
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploadingChunk, setIsUploadingChunk] = useState(false);
+  const [errorDialog, setErrorDialog] = useState({ open: false, title: '', message: '' });
+  
+  const queryClient = useQueryClient();
+
+  const handleUploadSubmit = async () => {
+    if (!selectedFile || !id) return;
+    setIsUploadingChunk(true);
+    setUploadProgress(0);
+
+    const chunkSize = 1024 * 1024 * 2; // 2MB
+    const totalChunks = Math.ceil(selectedFile.size / chunkSize);
+    const uploadId = crypto.randomUUID();
+
+    try {
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, selectedFile.size);
+        const chunk = selectedFile.slice(start, end);
+        
+        const formData = new FormData();
+        formData.append('file', chunk, selectedFile.name);
+        formData.append('uploadId', uploadId);
+        formData.append('chunkIndex', i.toString());
+        formData.append('totalChunks', totalChunks.toString());
+        formData.append('fileName', selectedFile.name);
+        formData.append('ownerModule', '1'); // 1 = Employee
+        formData.append('referenceId', id);
+        formData.append('documentType', uploadDocType);
+
+        await documentsApi.uploadDocumentChunk(formData);
+        setUploadProgress(Math.round(((i + 1) / totalChunks) * 100));
+      }
+      
+      await queryClient.invalidateQueries({ queryKey: ['documents'] });
+      setUploadOpen(false);
+      setSelectedFile(null);
+      setUploadDocType('1');
+    } catch (error) {
+      console.error('Chunk upload failed', error);
+      setErrorDialog({
+        open: true,
+        title: 'Upload Failed',
+        message: 'An error occurred while uploading the file. Please check your connection and try again.'
+      });
+    } finally {
+      setIsUploadingChunk(false);
+      setUploadProgress(0);
+    }
+  };
 
   useEffect(() => {
     if (employee) {
@@ -354,7 +443,7 @@ export const EmployeeDetail = () => {
         >
           <Tab icon={<BadgeRounded sx={{ mr: 1 }}/>} iconPosition="start" label="General Info" />
           <Tab icon={<AccountBalanceWalletRounded sx={{ mr: 1 }}/>} iconPosition="start" label="Financial & Compensation" />
-          <Tab icon={<FolderSharedRounded sx={{ mr: 1 }}/>} iconPosition="start" label="Documents" />
+          <Tab icon={<FolderSharedRounded sx={{ mr: 1 }}/>} iconPosition="start" label={`Documents (${documentCount})`} />
           <Tab icon={<ContactsRounded sx={{ mr: 1 }}/>} iconPosition="start" label="Notes & References" />
         </Tabs>
       </Box>
@@ -387,6 +476,9 @@ export const EmployeeDetail = () => {
             <TextField select label="Department" name="departmentId" value={formState.departmentId} onChange={handleChange} size="small" fullWidth sx={premiumInputSx}>
               <MenuItem value=""><em>None</em></MenuItem>
               {departmentOptions.map((d: any) => <MenuItem key={d.value} value={d.value}>{d.label}</MenuItem>)}
+              {formState.departmentId && !departmentOptions.some((d: any) => d.value === formState.departmentId) && (
+                <MenuItem value={formState.departmentId} sx={{ display: 'none' }}>Loading...</MenuItem>
+              )}
             </TextField>
           </Box>
         </Box>
@@ -433,19 +525,180 @@ export const EmployeeDetail = () => {
 
       {/* ── TAB 3: DOCUMENTS ──────────────────────────────────────────────── */}
       <TabPanel value={activeTab} index={2}>
-        <Box className={styles.actionCardsGrid}>
-          <Box sx={{ ...glassPanelSx, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>Employee Documents</Typography>
-              <Typography variant="body2" color="text.secondary">View contracts, ID copies, and official records linked to this employee.</Typography>
-            </Box>
-            <Divider sx={{ opacity: 0.5 }} />
-            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="body1" sx={{ fontWeight: 600 }}>4 Active Documents</Typography>
-              <Button variant="outlined" endIcon={<OpenInNewRounded />} sx={actionButtonSx}>
-                Open Document Vault
-              </Button>
-            </Stack>
+        <Box sx={glassPanelSx}>
+          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>Employee Documents</Typography>
+            <Button variant="contained" startIcon={<UploadFileRounded />} onClick={() => setUploadOpen(true)} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
+              Upload Document
+            </Button>
+          </Stack>
+          <Box sx={{ borderRadius: 4, overflow: 'hidden', backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.03)' }}>
+            <DataTable
+              data={documentData?.items || []}
+              totalCount={documentData?.totalCount || 0}
+              loading={documentsLoading}
+              columns={[
+                {
+                  field: 'fileName',
+                  headerName: 'Original File Name',
+                  flex: 1.5,
+                  minWidth: 200,
+                  filterType: 'text',
+                  renderCell: (params) => (
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                      {params.value}
+                    </Typography>
+                  )
+                },
+                {
+                  field: 'extension',
+                  headerName: 'Extension',
+                  flex: 1,
+                  minWidth: 120,
+                  filterType: 'select',
+                  filterOptions: [
+                    { value: 'pdf', label: 'PDF' },
+                    { value: 'docx', label: 'Word (.docx)' },
+                    { value: 'xlsx', label: 'Excel (.xlsx)' },
+                    { value: 'png', label: 'PNG' },
+                    { value: 'jpeg', label: 'JPEG' },
+                    { value: 'jpg', label: 'JPG' },
+                    { value: 'txt', label: 'Text (.txt)' },
+                  ],
+                  valueGetter: (_, row: any) => {
+                    if (!row?.fileName) return '';
+                    const parts = row.fileName.split('.');
+                    return parts.length > 1 ? parts.pop() : '';
+                  },
+                  renderCell: (params) => (
+                    <Chip label={(params.value as string)?.toUpperCase() || 'N/A'} size="small" variant="outlined" sx={{ fontWeight: 600, maxWidth: '100%' }} />
+                  )
+                },
+                {
+                  field: 'documentType',
+                  headerName: 'Type',
+                  flex: 1,
+                  minWidth: 150,
+                  filterType: 'select',
+                  filterOptions: [
+                    { value: '0', label: 'Other' },
+                    { value: '1', label: 'Identification' },
+                    { value: '2', label: 'Contract' },
+                    { value: '3', label: 'Health Record' },
+                    { value: '4', label: 'Certificate' },
+                    { value: '5', label: 'Resume' },
+                    { value: '6', label: 'Background Check' },
+                    { value: '7', label: 'Performance Review' },
+                    { value: '8', label: 'Payroll And Tax' },
+                    { value: '9', label: 'Offboarding' },
+                  ],
+                  valueGetter: (_, row: any) => row.documentType,
+                  renderCell: (params: any) => {
+                    const typeLabels: Record<number, string> = {
+                      0: 'Other', 1: 'Identification', 2: 'Contract', 3: 'Health Record', 4: 'Certificate',
+                      5: 'Resume', 6: 'Background Check', 7: 'Performance Review', 8: 'Payroll And Tax', 9: 'Offboarding'
+                    };
+                    return <Chip label={typeLabels[params.value as number] || 'Other'} size="small" />;
+                  }
+                },
+                {
+                  field: 'fileSizeBytes',
+                  headerName: 'File Size',
+                  flex: 1,
+                  minWidth: 120,
+                  filterType: 'fileSize',
+                  filterOptions: [
+                    { value: '1024', label: '1 KB' },
+                    { value: '10240', label: '10 KB' },
+                    { value: '102400', label: '100 KB' },
+                    { value: '1048576', label: '1 MB' },
+                    { value: '10485760', label: '10 MB' },
+                    { value: '104857600', label: '100 MB' },
+                    { value: '1073741824', label: '1 GB' },
+                    { value: '10737418240', label: '10 GB' },
+                    { value: '107374182400', label: '100 GB' },
+                  ],
+                  valueGetter: (_, row: any) => row.fileSizeBytes,
+                  renderCell: (params) => {
+                    const bytes = params.value as number;
+                    if (!+bytes) return <Typography variant="body2" color="text.secondary">0 Bytes</Typography>;
+                    const k = 1024;
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return (
+                      <Typography variant="body2" color="text.secondary">
+                        {`${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`}
+                      </Typography>
+                    );
+                  }
+                },
+                {
+                  field: 'createdAt',
+                  headerName: 'Upload Date',
+                  flex: 1,
+                  minWidth: 150,
+                  filterType: 'date',
+                  valueGetter: (value: string | null | undefined) => value ? new Date(value) : null,
+                  valueFormatter: (value: Date | null | undefined) => value ? new Date(value).toLocaleDateString() : '',
+                },
+                {
+                  field: 'expiryDate',
+                  headerName: 'Expiry Date',
+                  flex: 1,
+                  minWidth: 150,
+                  filterType: 'date',
+                  valueGetter: (_, row: any) => row.expiryDate ? new Date(row.expiryDate) : null,
+                  valueFormatter: (value: Date | null | undefined) => value ? new Date(value).toLocaleDateString() : '-',
+                },
+                {
+                  field: 'isAvailable',
+                  headerName: 'Availability',
+                  flex: 1,
+                  minWidth: 160,
+                  filterType: 'select',
+                  filterOptions: [
+                    { value: 'available', label: 'Available' },
+                    { value: 'missing', label: 'Missing' },
+                  ],
+                  renderCell: (params) => {
+                    const isMissing = params.value === false;
+                    
+                    return (
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        {isMissing ? (
+                          <Tooltip title="Missing on Disk" placement="top">
+                            <Chip 
+                              label="Missing" 
+                              size="small" 
+                              color="error" 
+                              variant="outlined" 
+                              icon={<WarningRounded fontSize="small" />} 
+                            />
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="Available" placement="top">
+                            <Chip 
+                              label="Available" 
+                              size="small" 
+                              color="success" 
+                              variant="outlined" 
+                              icon={<CheckCircleRounded fontSize="small" />} 
+                            />
+                          </Tooltip>
+                        )}
+                      </Stack>
+                    );
+                  }
+                }
+              ]}
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              customFilters={customFilters}
+              onCustomFilterChange={(field: string, value: string, operator: string) => {
+                setCustomFilters((prev) => ({ ...prev, [field]: { value, operator } }));
+              }}
+              onRowClick={(id: string) => navigate(`/documents/${id}`)}
+            />
           </Box>
         </Box>
       </TabPanel>
@@ -468,6 +721,59 @@ export const EmployeeDetail = () => {
           </Box>
         </Box>
       </TabPanel>
+
+      <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Upload Employee Document</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Document Type</InputLabel>
+              <Select value={uploadDocType} label="Document Type" onChange={(e) => setUploadDocType(e.target.value)} disabled={isUploadingChunk}>
+                <MenuItem value="1">Identification</MenuItem>
+                <MenuItem value="2">Contract</MenuItem>
+                <MenuItem value="3">Health Record</MenuItem>
+                <MenuItem value="4">Certificate</MenuItem>
+                <MenuItem value="5">Resume</MenuItem>
+                <MenuItem value="6">Background Check</MenuItem>
+                <MenuItem value="7">Performance Review</MenuItem>
+                <MenuItem value="8">Payroll & Tax</MenuItem>
+                <MenuItem value="9">Offboarding</MenuItem>
+                <MenuItem value="0">Other</MenuItem>
+              </Select>
+            </FormControl>
+            <Button variant="outlined" component="label" fullWidth disabled={isUploadingChunk}>
+              {selectedFile ? selectedFile.name : 'Select File'}
+              <input type="file" hidden onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} />
+            </Button>
+            {isUploadingChunk && (
+              <Box sx={{ width: '100%' }}>
+                <Stack direction="row" sx={{ justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">Uploading...</Typography>
+                  <Typography variant="body2" color="text.secondary">{uploadProgress}%</Typography>
+                </Stack>
+                <LinearProgress variant="determinate" value={uploadProgress} sx={{ borderRadius: 1, height: 8 }} />
+              </Box>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setUploadOpen(false)} disabled={isUploadingChunk}>Cancel</Button>
+          <Button variant="contained" onClick={handleUploadSubmit} disabled={!selectedFile || isUploadingChunk}>
+            Upload
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      <PopupDialog
+        open={errorDialog.open}
+        onClose={() => setErrorDialog(prev => ({ ...prev, open: false }))}
+        title={errorDialog.title}
+        content={errorDialog.message}
+        confirmColor="error"
+        onConfirm={() => setErrorDialog(prev => ({ ...prev, open: false }))}
+        confirmText="Close"
+        hideCancel
+      />
     </Box>
   );
 };

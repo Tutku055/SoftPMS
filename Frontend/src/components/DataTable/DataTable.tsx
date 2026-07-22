@@ -10,7 +10,7 @@ import type {
 import { Box, Stack, TextField, MenuItem, Typography } from '@mui/material';
 
 export type CustomFilterValue = { value: string; operator: string };
-export type FilterType = 'text' | 'date' | 'select' | 'multi-select' | 'number' | 'fullName';
+export type FilterType = 'text' | 'date' | 'select' | 'multi-select' | 'number' | 'fullName' | 'fileSize';
 
 export type DataTableColumnDef = Omit<GridColDef, 'renderHeader'> & {
   filterType?: FilterType;
@@ -55,6 +55,11 @@ const NUMBER_OPERATORS = [
   { value: 'is', label: 'Is' },
   { value: 'morethan', label: 'More than' },
   { value: 'lessthan', label: 'Less than' },
+];
+
+const FILESIZE_OPERATORS = [
+  { value: 'biggerthan', label: 'Bigger than' },
+  { value: 'smallerthan', label: 'Smaller than' },
 ];
 
 const SELECT_OPERATORS = [
@@ -113,7 +118,7 @@ const renderHeaderWithFilter = (
   options?: { value: string; label: string }[]
 ) => {
   return (_params: GridColumnHeaderParams) => {
-    const filterState = customFilters[field] || { value: '', operator: (filterType === 'text' || filterType === 'fullName') ? 'contains' : filterType === 'multi-select' ? 'in' : 'is' };
+    const filterState = customFilters[field] || { value: '', operator: (filterType === 'text' || filterType === 'fullName') ? 'contains' : filterType === 'multi-select' ? 'in' : (filterType === 'fileSize' ? 'biggerthan' : 'is') };
     const { value, operator } = filterState;
 
     const getOpList = () => {
@@ -122,6 +127,7 @@ const renderHeaderWithFilter = (
       if (filterType === 'multi-select') return MULTI_SELECT_OPERATORS;
       if (filterType === 'number') return NUMBER_OPERATORS;
       if (filterType === 'fullName') return FULLNAME_OPERATORS;
+      if (filterType === 'fileSize') return FILESIZE_OPERATORS;
       return STRING_OPERATORS;
     };
     const opList = getOpList();
@@ -168,7 +174,7 @@ const renderHeaderWithFilter = (
           </TextField>
 
           {/* Value Input */}
-          {filterType === 'select' && options ? (
+          {(filterType === 'select' || filterType === 'fileSize') && options ? (
             <TextField
               select
               size="small"
@@ -242,11 +248,11 @@ const renderHeaderWithFilter = (
                 '& input': { py: 0.5, px: 1, fontSize: '0.75rem' }
               }}
             />
-          ) : filterType === 'number' ? (
+          ) : (filterType === 'number' || filterType === 'fileSize') ? (
             <TextField
               type="number"
               size="small"
-              placeholder={`Value...`}
+              placeholder={filterType === 'fileSize' ? `Value (MB)...` : `Value...`}
               value={value}
               onChange={(e) => onCustomFilterChange(field, e.target.value, operator)}
               onClick={(e) => e.stopPropagation()}
@@ -344,6 +350,8 @@ export const DataTable = ({
             borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
             fontSize: '0.875rem',
             cursor: onRowClick ? 'pointer' : 'default',
+            display: 'flex',
+            alignItems: 'center',
           },
           '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
             outline: 'none',

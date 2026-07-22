@@ -73,18 +73,6 @@ public class ApplicationDbContextInitialiser
                 .RuleFor(c => c.EndDate, f => null) //[cite: 1, 6]
                 .RuleFor(c => c.CreatedByUserId, f => creatorUserId); //[cite: 1, 6]
 
-            // 4. Document Faker //[cite: 1, 7]
-            var documentFaker = new Faker<EmployeeDocument>()
-                .RuleFor(d => d.Id, f => Guid.NewGuid()) //[cite: 2]
-                .RuleFor(d => d.CreatedAt, f => f.Date.Past(1)) //[cite: 2]
-                .RuleFor(d => d.DocumentType, f => f.PickRandom<DocumentType>()) //[cite: 1, 7]
-                .RuleFor(d => d.FileName, (f, d) => $"{d.DocumentType}_{f.Random.AlphaNumeric(6)}.pdf") //[cite: 1, 7]
-                .RuleFor(d => d.FilePath, (f, d) => $@"C:\Users\user\Downloads\DocumentsFake\{d.FileName}") //[cite: 1, 7]
-                .RuleFor(d => d.IssueDate, f => f.Date.Past(1)) //[cite: 1, 7]
-                .RuleFor(d => d.ExpiryDate, f => f.Date.Future(3)) //[cite: 1, 7]
-                .RuleFor(d => d.ReminderDate, (f, d) => d.ExpiryDate?.AddDays(-30)) //[cite: 1, 7]
-                .RuleFor(d => d.CreatedByUserId, f => creatorUserId); //[cite: 1, 7]
-
             // 5. Note Faker //[cite: 1, 8]
             var noteFaker = new Faker<EmployeeNote>()
                 .RuleFor(n => n.Id, f => Guid.NewGuid()) //[cite: 2]
@@ -139,11 +127,7 @@ public class ApplicationDbContextInitialiser
                     comps.ForEach(c => c.EmployeeId = e.Id); //[cite: 1, 6]
                     return comps; //[cite: 1]
                 })
-                .RuleFor(e => e.Documents, (f, e) => {
-                    var docs = documentFaker.Generate(f.Random.Int(2, 5)); //[cite: 1]
-                    docs.ForEach(d => d.EmployeeId = e.Id); //[cite: 1, 7]
-                    return docs; //[cite: 1]
-                })
+
                 .RuleFor(e => e.Notes, (f, e) => {
                     var notes = noteFaker.Generate(f.Random.Int(0, 3)); //[cite: 1]
                     notes.ForEach(n => n.EmployeeId = e.Id); //[cite: 1, 8]

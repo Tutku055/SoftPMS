@@ -100,7 +100,7 @@ export const Roster = () => {
 
   // ─── BUILD API FILTER LIST ────────────────────────────────────────────────
   const buildFilters = useCallback(
-    (qf: QuickFilter, cols: Record<string, CustomFilterValue>, qs: string) => {
+    (cols: Record<string, CustomFilterValue>, qs: string) => {
       const filters: { field: string; operator: string; value: string }[] = [];
 
       Object.entries(cols).forEach(([field, filterData]) => {
@@ -145,7 +145,7 @@ export const Roster = () => {
   useEffect(() => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
-      setApiFilters(buildFilters(activeQuickFilter, columnFilters, debouncedQuickSearch));
+      setApiFilters(buildFilters(columnFilters, debouncedQuickSearch));
       setPaginationModel((prev) => ({ ...prev, page: 0 }));
     }, 350);
     return () => {

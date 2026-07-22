@@ -4,8 +4,10 @@ import { useDepartmentDetail } from '../../hooks/useDepartmentDetail';
 import { useUpdateDepartment } from '../../hooks/useUpdateDepartment';
 import { useDeleteDepartment } from '../../hooks/useDeleteDepartment';
 import { useEmployees } from '../../../employees/hooks/useEmployees';
+import { useDocuments, useUploadDocument } from '../../../documents/hooks/useDocuments';
 import { DataTable } from '../../../../components/DataTable/DataTable';
 import type { DataTableColumnDef } from '../../../../components/DataTable/DataTable';
+import { parseDocumentFilters } from '../../../documents/utils/filterUtils';
 import {
   Box,
   Typography,
@@ -21,6 +23,15 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
 } from '@mui/material';
 import {
   ArrowBackRounded,
@@ -28,10 +39,11 @@ import {
   BadgeRounded,
   PeopleAltRounded,
   FolderSharedRounded,
-  OpenInNewRounded,
   BusinessRounded,
   DeleteRounded,
-  WarningRounded
+  WarningRounded,
+  UploadFileRounded,
+  CheckCircleRounded
 } from '@mui/icons-material';
 import { PopupDialog } from '../../../../components/PopupDialog/PopupDialog';
 import styles from './DepartmentDetail.module.css';
@@ -68,20 +80,6 @@ const premiumInputSx = {
   '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
     borderColor: 'primary.main !important',
     borderWidth: '1px !important',
-  }
-};
-
-const actionButtonSx = {
-  borderRadius: '10px',
-  borderColor: 'rgba(128, 128, 128, 0.25)',
-  color: 'text.primary',
-  fontWeight: 500,
-  textTransform: 'none',
-  backgroundColor: 'transparent',
-  transition: 'all 0.2s ease',
-  '&:hover': {
-    backgroundColor: 'rgba(128, 128, 128, 0.06)',
-    borderColor: 'rgba(128, 128, 128, 0.5)',
   }
 };
 
@@ -123,15 +121,52 @@ export const DepartmentDetail = () => {
     page: 0,
     pageSize: 10,
   });
+  const [employeeCustomFilters, setEmployeeCustomFilters] = useState<Record<string, any>>({});
 
   const { data: employeesData, isLoading: isEmployeesLoading, isFetching: isEmployeesFetching } = useEmployees({
     pageNumber: employeePage.page + 1,
     pageSize: employeePage.pageSize,
-    filters: id ? [
-      { field: 'departmentId', operator: 'equals', value: id },
-      { field: 'employmentStatus', operator: 'is', value: '1' }
-    ] : []
+    filters: [
+      ...(id ? [{ field: 'departmentId', operator: 'equals', value: id }, { field: 'employmentStatus', operator: 'is', value: '1' }] : []),
+      ...Object.entries(employeeCustomFilters).filter(([_, f]) => f.value).map(([field, f]) => ({
+        field: field === 'fullName' ? 'firstName' : field, // Or some special handling if needed
+        operator: f.operator,
+        value: f.value
+      }))
+    ]
   });
+
+  const [docPaginationModel, setDocPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [docCustomFilters, setDocCustomFilters] = useState<Record<string, any>>({});
+  
+  const parsedFilters = parseDocumentFilters(docCustomFilters);
+
+  const { data: documentData, isLoading: documentsLoading } = useDocuments({
+    pageNumber: docPaginationModel.page + 1,
+    pageSize: docPaginationModel.pageSize,
+    referenceId: id,
+    ownerModule: 2, // Department
+    ...parsedFilters,
+  });
+
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadDocType, setUploadDocType] = useState('100'); // Default: Policy
+
+  const uploadMutation = useUploadDocument();
+
+  const handleUploadSubmit = async () => {
+    if (!selectedFile || !id) return;
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('ownerModule', '2'); // 2 = Department
+    formData.append('referenceId', id);
+    formData.append('documentType', uploadDocType);
+    await uploadMutation.mutateAsync(formData);
+    setUploadOpen(false);
+    setSelectedFile(null);
+    setUploadDocType('100');
+  };
 
   useEffect(() => {
     if (department) {
@@ -283,7 +318,7 @@ export const DepartmentDetail = () => {
         >
           <Tab icon={<BadgeRounded sx={{ mr: 1 }}/>} iconPosition="start" label="General Info" />
           <Tab icon={<PeopleAltRounded sx={{ mr: 1 }}/>} iconPosition="start" label="Employees" />
-          <Tab icon={<FolderSharedRounded sx={{ mr: 1 }}/>} iconPosition="start" label="Documents" />
+          <Tab icon={<FolderSharedRounded sx={{ mr: 1 }}/>} iconPosition="start" label={`Documents (${documentData?.totalCount || 0})`} />
         </Tabs>
       </Box>
 
@@ -329,8 +364,10 @@ export const DepartmentDetail = () => {
               columns={employeeColumns}
               paginationModel={employeePage}
               onPaginationModelChange={setEmployeePage}
-              customFilters={{}}
-              onCustomFilterChange={() => {}}
+              customFilters={employeeCustomFilters}
+              onCustomFilterChange={(field: string, value: string, operator: string) => {
+                setEmployeeCustomFilters((prev) => ({ ...prev, [field]: { value, operator } }));
+              }}
               onRowClick={(employeeId) => navigate(`/employees/${employeeId}`)}
             />
           </Box>
@@ -339,19 +376,175 @@ export const DepartmentDetail = () => {
 
       {/* ── TAB 3: DOCUMENTS ──────────────────────────────────────────────── */}
       <TabPanel value={activeTab} index={2}>
-        <Box className={styles.actionCardsGrid}>
-          <Box sx={{ ...glassPanelSx, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>Department Policies & Documents</Typography>
-              <Typography variant="body2" color="text.secondary">View and manage documents associated with this department.</Typography>
-            </Box>
-            <Divider sx={{ opacity: 0.5 }} />
-            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="body1" sx={{ fontWeight: 600 }}>0 Active Documents</Typography>
-              <Button variant="outlined" endIcon={<OpenInNewRounded />} sx={actionButtonSx}>
-                Open Vault
-              </Button>
-            </Stack>
+        <Box sx={glassPanelSx}>
+          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>Department Documents</Typography>
+            <Button variant="contained" startIcon={<UploadFileRounded />} onClick={() => setUploadOpen(true)} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
+              Upload Document
+            </Button>
+          </Stack>
+          <Box sx={{ borderRadius: 4, overflow: 'hidden', backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.03)' }}>
+            <DataTable
+              data={documentData?.items || []}
+              totalCount={documentData?.totalCount || 0}
+              loading={documentsLoading}
+              columns={[
+                {
+                  field: 'fileName',
+                  headerName: 'Original File Name',
+                  flex: 1.5,
+                  minWidth: 200,
+                  filterType: 'text',
+                  renderCell: (params) => (
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                      {params.value}
+                    </Typography>
+                  )
+                },
+                {
+                  field: 'extension',
+                  headerName: 'Extension',
+                  flex: 1,
+                  minWidth: 120,
+                  filterType: 'select',
+                  filterOptions: [
+                    { value: 'pdf', label: 'PDF' },
+                    { value: 'docx', label: 'Word (.docx)' },
+                    { value: 'xlsx', label: 'Excel (.xlsx)' },
+                    { value: 'png', label: 'PNG' },
+                    { value: 'jpeg', label: 'JPEG' },
+                    { value: 'jpg', label: 'JPG' },
+                    { value: 'txt', label: 'Text (.txt)' },
+                  ],
+                  valueGetter: (_, row: any) => {
+                    if (!row?.fileName) return '';
+                    const parts = row.fileName.split('.');
+                    return parts.length > 1 ? parts.pop() : '';
+                  },
+                  renderCell: (params) => (
+                    <Chip label={(params.value as string)?.toUpperCase() || 'N/A'} size="small" variant="outlined" sx={{ fontWeight: 600, maxWidth: '100%' }} />
+                  )
+                },
+                {
+                  field: 'documentType',
+                  headerName: 'Type',
+                  flex: 1,
+                  minWidth: 150,
+                  filterType: 'select',
+                  filterOptions: [
+                    { value: '0', label: 'Other' },
+                    { value: '100', label: 'Policy' },
+                    { value: '101', label: 'Budget Report' },
+                    { value: '102', label: 'Org Structure' },
+                    { value: '103', label: 'Compliance & Audit' },
+                    { value: '104', label: 'Strategic Plan' },
+                  ],
+                  valueGetter: (_, row: any) => row.documentType,
+                  renderCell: (params: any) => {
+                    const typeLabels: Record<number, string> = {
+                      100: 'Policy', 101: 'Budget Report', 102: 'Org Structure', 103: 'Compliance & Audit', 104: 'Strategic Plan', 0: 'Other'
+                    };
+                    return <Chip label={typeLabels[params.value as number] || 'Other'} size="small" />;
+                  }
+                },
+                {
+                  field: 'fileSizeBytes',
+                  headerName: 'File Size',
+                  flex: 1,
+                  minWidth: 120,
+                  filterType: 'fileSize',
+                  filterOptions: [
+                    { value: '1024', label: '1 KB' },
+                    { value: '10240', label: '10 KB' },
+                    { value: '102400', label: '100 KB' },
+                    { value: '1048576', label: '1 MB' },
+                    { value: '10485760', label: '10 MB' },
+                    { value: '104857600', label: '100 MB' },
+                    { value: '1073741824', label: '1 GB' },
+                    { value: '10737418240', label: '10 GB' },
+                    { value: '107374182400', label: '100 GB' },
+                  ],
+                  valueGetter: (_, row: any) => row.fileSizeBytes,
+                  renderCell: (params) => {
+                    const bytes = params.value as number;
+                    if (!+bytes) return <Typography variant="body2" color="text.secondary">0 Bytes</Typography>;
+                    const k = 1024;
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return (
+                      <Typography variant="body2" color="text.secondary">
+                        {`${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`}
+                      </Typography>
+                    );
+                  }
+                },
+                {
+                  field: 'createdAt',
+                  headerName: 'Upload Date',
+                  flex: 1,
+                  minWidth: 150,
+                  filterType: 'date',
+                  valueGetter: (value: string | null | undefined) => value ? new Date(value) : null,
+                  valueFormatter: (value: Date | null | undefined) => value ? new Date(value).toLocaleDateString() : '',
+                },
+                {
+                  field: 'expiryDate',
+                  headerName: 'Expiry Date',
+                  flex: 1,
+                  minWidth: 150,
+                  filterType: 'date',
+                  valueGetter: (_, row: any) => row.expiryDate ? new Date(row.expiryDate) : null,
+                  valueFormatter: (value: Date | null | undefined) => value ? new Date(value).toLocaleDateString() : '-',
+                },
+                {
+                  field: 'isAvailable',
+                  headerName: 'Availability',
+                  flex: 1,
+                  minWidth: 160,
+                  filterType: 'select',
+                  filterOptions: [
+                    { value: 'available', label: 'Available' },
+                    { value: 'missing', label: 'Missing' },
+                  ],
+                  renderCell: (params) => {
+                    const isMissing = params.value === false;
+                    
+                    return (
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        {isMissing ? (
+                          <Tooltip title="Missing on Disk" placement="top">
+                            <Chip 
+                              label="Missing" 
+                              size="small" 
+                              color="error" 
+                              variant="outlined" 
+                              icon={<WarningRounded fontSize="small" />} 
+                            />
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="Available" placement="top">
+                            <Chip 
+                              label="Available" 
+                              size="small" 
+                              color="success" 
+                              variant="outlined" 
+                              icon={<CheckCircleRounded fontSize="small" />} 
+                            />
+                          </Tooltip>
+                        )}
+                      </Stack>
+                    );
+                  }
+                }
+              ]}
+              paginationModel={docPaginationModel}
+              onPaginationModelChange={setDocPaginationModel}
+              customFilters={docCustomFilters}
+              onCustomFilterChange={(field: string, value: string, operator: string) => {
+                setDocCustomFilters((prev) => ({ ...prev, [field]: { value, operator } }));
+              }}
+              onRowClick={(docId: string) => navigate(`/documents/${docId}`)}
+            />
           </Box>
         </Box>
       </TabPanel>
@@ -398,6 +591,35 @@ export const DepartmentDetail = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Upload Department Document</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Document Type</InputLabel>
+              <Select value={uploadDocType} label="Document Type" onChange={(e) => setUploadDocType(e.target.value)}>
+                <MenuItem value="100">Policy</MenuItem>
+                <MenuItem value="101">Budget Report</MenuItem>
+                <MenuItem value="102">Org Structure</MenuItem>
+                <MenuItem value="103">Compliance & Audit</MenuItem>
+                <MenuItem value="104">Strategic Plan</MenuItem>
+                <MenuItem value="0">Other</MenuItem>
+              </Select>
+            </FormControl>
+            <Button variant="outlined" component="label" fullWidth>
+              {selectedFile ? selectedFile.name : 'Select File'}
+              <input type="file" hidden onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} />
+            </Button>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setUploadOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleUploadSubmit} disabled={!selectedFile || uploadMutation.isPending}>
+            Upload
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
