@@ -24,6 +24,7 @@ public sealed class JwtTokenService(IOptions<JwtSettings> options) : IJwtTokenSe
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email),
             new("username", user.Username),
+            new("roleId", user.RoleId.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
 

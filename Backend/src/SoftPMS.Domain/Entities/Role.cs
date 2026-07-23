@@ -8,6 +8,10 @@ public class Role: BaseEntity
 
     public string Color { get; set; } = string.Empty;
 
+    public bool IsActive { get; set; } = true;
+
+    public bool IsSystemRole { get; set; } = false;
+
     // Navigation properties
     public virtual ICollection<User> Users { get; set; } = new HashSet<User>();
 

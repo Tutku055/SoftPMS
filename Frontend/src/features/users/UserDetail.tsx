@@ -220,6 +220,22 @@ export const UserDetail = () => {
     );
   };
 
+  const handleDeleteClick = () => {
+    if (!user) return;
+    
+    if (user.isActive) {
+      setDialogState({
+        open: true,
+        title: 'Cannot Delete User',
+        message: 'Active users cannot be deleted. Please set the user to inactive first.',
+        type: 'warning',
+      });
+      return;
+    }
+
+    setDeleteConfirmOpen(true);
+  };
+
   const handleDelete = () => {
     if (!id) return;
     deleteUser(id, {
@@ -643,7 +659,7 @@ export const UserDetail = () => {
                 variant="outlined"
                 color="error"
                 startIcon={<PersonRemoveRounded />}
-                onClick={() => setDeleteConfirmOpen(true)}
+                onClick={handleDeleteClick}
                 disabled={currentUser?.id === user.id || user.isSystemUser || user.role?.name === 'SuperAdmin'}
                 sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}
               >

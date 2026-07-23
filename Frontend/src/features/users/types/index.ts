@@ -12,6 +12,10 @@ export interface RoleDto {
   name: string;
   description: string;
   color: string;
+  isActive: boolean;
+  isSystemRole: boolean;
+  userCount?: number;
+  permissionIds?: string[];
 }
 
 export interface UserDto {

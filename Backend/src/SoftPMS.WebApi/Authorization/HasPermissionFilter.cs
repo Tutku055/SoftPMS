@@ -9,7 +9,7 @@ namespace SoftPMS.WebApi.Authorization;
 /// matching the value declared on the <see cref="HasPermissionAttribute"/>.
 /// Returns 401 when the user is not authenticated, 403 when the permission is absent.
 /// </summary>
-public sealed class HasPermissionFilter(string permission) : IAuthorizationFilter
+public sealed class HasPermissionFilter(params string[] permissions) : IAuthorizationFilter
 {
     private const string PermissionClaimType = "permission";
 
@@ -29,18 +29,19 @@ public sealed class HasPermissionFilter(string permission) : IAuthorizationFilte
             return;
         }
 
-        // Check for the required permission claim
-        var hasPermission = user.Claims
+        // Check for any of the required permissions
+        var hasPermission = permissions.Length == 0 || user.Claims
             .Any(c => c.Type == PermissionClaimType
-                   && c.Value.Equals(permission, StringComparison.OrdinalIgnoreCase));
+                   && permissions.Contains(c.Value, StringComparer.OrdinalIgnoreCase));
 
         if (!hasPermission)
         {
+            var reqPerms = string.Join(" or ", permissions);
             context.Result = new ObjectResult(new
             {
                 status    = 403,
                 title     = "Forbidden",
-                message   = $"You do not have the required permission: '{permission}'."
+                message   = $"You do not have the required permission: '{reqPerms}'."
             })
             {
                 StatusCode = StatusCodes.Status403Forbidden

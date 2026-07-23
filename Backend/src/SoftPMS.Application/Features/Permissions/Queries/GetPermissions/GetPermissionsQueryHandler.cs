@@ -9,12 +9,20 @@ namespace SoftPMS.Application.Features.Permissions.Queries.GetPermissions;
 
 public sealed class GetPermissionsQueryHandler(
     IApplicationDbContext context,
-    IMapper mapper)
+    IMapper mapper,
+    ICurrentUserService currentUserService)
     : IRequestHandler<GetPermissionsQuery, IEnumerable<PermissionDto>>
 {
     public async Task<IEnumerable<PermissionDto>> Handle(GetPermissionsQuery request, CancellationToken cancellationToken)
     {
-        return await context.Permissions
+        var userRoleId = await context.Users
+            .Where(u => u.Id == currentUserService.UserId)
+            .Select(u => u.RoleId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return await context.RolePermissions
+            .Where(rp => rp.RoleId == userRoleId)
+            .Select(rp => rp.Permission)
             .AsNoTracking()
             .ProjectTo<PermissionDto>(mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);

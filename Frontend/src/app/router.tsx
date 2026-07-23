@@ -13,8 +13,8 @@ import { DocumentArchive } from '../features/documents/components/DocumentArchiv
 import { DocumentDetail } from '../features/documents/components/DocumentDetail/DocumentDetail';
 import { UsersPage } from '../features/users/UsersPage';
 import { UserDetail } from '../features/users/UserDetail';
-
-const RolesList = () => <div>RolesList</div>;
+import { RoleList } from '../features/roles/components/RoleList/RoleList';
+import { RoleDetail } from '../features/roles/components/RoleDetail/RoleDetail';
 
 import { useLocation } from 'react-router-dom';
 
@@ -94,8 +94,17 @@ export const router = createBrowserRouter([
             element: <DocumentDetail />,
           },
           {
-            path: 'roles',
-            element: <RolesList />,
+            path: 'settings',
+            children: [
+              {
+                path: 'roles',
+                element: <RoleList />,
+              },
+              {
+                path: 'roles/:id',
+                element: <RoleDetail />,
+              },
+            ],
           },
           {
             path: 'users',

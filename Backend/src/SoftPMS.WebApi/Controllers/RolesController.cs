@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SoftPMS.Application.Common.Models;
+using SoftPMS.Application.DTOs.Employee;
 using SoftPMS.Application.DTOs.Role;
 using SoftPMS.Application.Features.Roles.Commands.AssignPermissionsToRole;
 using SoftPMS.Application.Features.Roles.Commands.CreateRole;
@@ -67,6 +69,15 @@ public sealed class RolesController : ApiControllerBase
         return NoContent();
     }
 
+    /// <summary>Get a paginated list of roles.</summary>
+    [HttpPost("search")]
+    [HasPermission("Roles.Read")]
+    [ProducesResponseType(typeof(PaginatedList<EmployeeDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Search([FromBody] SoftPMS.Application.Features.Roles.Queries.GetRolesWithPagination.GetRolesWithPaginationQuery query, CancellationToken ct)
+    {
+        return Ok(await Sender.Send(query, ct));
+    }
+
     /// <summary>Replace the complete permission set for a role.</summary>
     [HttpPut("{id:guid}/permissions")]
     [HasPermission("Roles.Update")]
@@ -79,6 +90,17 @@ public sealed class RolesController : ApiControllerBase
         CancellationToken ct)
     {
         await Sender.Send(new AssignPermissionsToRoleCommand(id, request.PermissionIds), ct);
+        return NoContent();
+    }
+
+    /// <summary>Toggle role active status.</summary>
+    [HttpPut("{id:guid}/toggle-active")]
+    [HasPermission("Roles.Update")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ToggleActive(Guid id, CancellationToken ct)
+    {
+        await Sender.Send(new SoftPMS.Application.Features.Roles.Commands.ToggleRoleActive.ToggleRoleActiveCommand(id), ct);
         return NoContent();
     }
 }

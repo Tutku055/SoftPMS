@@ -25,6 +25,11 @@ public sealed class DeleteUserCommandHandler(
             throw new DomainException("System users (Super Admin) cannot be deleted.");
         }
 
+        if (user.IsActive)
+        {
+            throw new DomainException("Cannot delete user because they are currently active. Please set them to inactive first.");
+        }
+
         user.IsDeleted = true;
         user.IsActive = false;
         

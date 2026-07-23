@@ -21,8 +21,12 @@ public sealed class UpdateRoleCommandHandler(
         if (nameExists)
             throw new Domain.Exceptions.DomainException($"Role '{request.Dto.Name}' already exists.");
 
+        if (role.IsSystemRole)
+            throw new Domain.Exceptions.DomainException($"System roles cannot be modified.");
+
         role.Name = request.Dto.Name;
         role.Description = request.Dto.Description;
+        role.Color = request.Dto.Color;
 
         await context.SaveChangesAsync(cancellationToken);
         

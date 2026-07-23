@@ -12,5 +12,9 @@ public class CreateRoleCommandValidator : AbstractValidator<CreateRoleCommand>
 
         RuleFor(v => v.Dto.Description)
             .MaximumLength(500).WithMessage("Description must not exceed 500 characters.");
+
+        RuleFor(v => v.Dto.Color)
+            .NotEmpty().WithMessage("Color is required.")
+            .Matches("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").WithMessage("Color must be a valid hex code.");
     }
 }

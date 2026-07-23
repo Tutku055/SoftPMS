@@ -31,4 +31,10 @@ public sealed class CurrentUserService(IHttpContextAccessor httpContextAccessor)
         ?? string.Empty;
 
     public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated ?? false;
+
+    public IEnumerable<string> Permissions =>
+        Principal?.Claims
+            .Where(c => c.Type == "permission" || c.Type == "permissions")
+            .Select(c => c.Value)
+            .ToList() ?? new List<string>();
 }

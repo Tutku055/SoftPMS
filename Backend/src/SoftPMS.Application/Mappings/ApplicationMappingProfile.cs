@@ -103,7 +103,12 @@ public class ApplicationMappingProfile : Profile
             .ForMember(d => d.Employee, o => o.Ignore());
 
         // Role mappings
-        CreateMap<Role, RoleDto>().ReverseMap();
+        CreateMap<Role, RoleDto>()
+            .ForMember(d => d.UserCount, o => o.MapFrom(s => s.Users.Count(u => !u.IsDeleted)))
+            .ForMember(d => d.PermissionIds, o => o.MapFrom(s => s.RolePermissions.Select(rp => rp.PermissionId).ToList()))
+            .ReverseMap();
+        CreateMap<Role, RoleListDto>()
+            .ForCtorParam("UserCount", o => o.MapFrom(s => s.Users.Count(u => !u.IsDeleted)));
         CreateMap<CreateRoleDto, Role>();
         CreateMap<UpdateRoleDto, Role>()
             .ForMember(d => d.Id, o => o.Ignore())

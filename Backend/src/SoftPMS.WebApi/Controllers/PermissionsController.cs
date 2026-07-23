@@ -11,7 +11,7 @@ public sealed class PermissionsController : ApiControllerBase
 {
     /// <summary>Get all available system permissions.</summary>
     [HttpGet]
-    [HasPermission("Permissions.Read")]
+    [HasPermission("Permissions.Read", "Permissions.Assign")]
     [ProducesResponseType(typeof(IEnumerable<PermissionDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {

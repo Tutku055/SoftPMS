@@ -33,6 +33,7 @@ public static class DatabaseSeeder
         ("Roles.Create",     "Create new roles"),
         ("Roles.Update",     "Edit roles"),
         ("Roles.Delete",     "Delete roles"),
+        ("Permissions.Assign", "Assign permissions to roles"),
         ("Users.Read",       "View user accounts"),
         ("Users.Create",     "Create user accounts"),
         ("Users.Update",     "Edit user accounts"),
@@ -96,7 +97,8 @@ public static class DatabaseSeeder
             // ── 4. Assign ALL permissions to the Admin role (idempotent) ─────
             var allPermissions     = await db.Permissions.ToListAsync(ct);
             var assignedIds        = adminRole.RolePermissions.Select(rp => rp.PermissionId).ToHashSet();
-            var missingPermLinks   = allPermissions
+            var missingPermLinks = allPermissions
+                .Where(p => p.Name != "Permissions.Assign") // Do not auto-assign this
                 .Where(p => !assignedIds.Contains(p.Id))
                 .Select(p => new RolePermission { RoleId = adminRole.Id, PermissionId = p.Id })
                 .ToList();

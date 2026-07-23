@@ -13,13 +13,13 @@ namespace SoftPMS.WebApi.Authorization;
 /// with the required permission passed as a constructor argument.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
-public sealed class HasPermissionAttribute(string permission) : Attribute, IFilterFactory
+public sealed class HasPermissionAttribute(params string[] permissions) : Attribute, IFilterFactory
 {
-    public string Permission { get; } = permission;
+    public string[] Permissions { get; } = permissions;
 
     // The filter itself has no mutable state beyond the permission string → safe to reuse.
     public bool IsReusable => true;
 
     public IFilterMetadata CreateInstance(IServiceProvider serviceProvider) =>
-        new HasPermissionFilter(Permission);
+        new HasPermissionFilter(Permissions);
 }

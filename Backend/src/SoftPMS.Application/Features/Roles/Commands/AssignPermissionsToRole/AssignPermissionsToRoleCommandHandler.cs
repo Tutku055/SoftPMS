@@ -6,7 +6,7 @@ using SoftPMS.Domain.Exceptions;
 
 namespace SoftPMS.Application.Features.Roles.Commands.AssignPermissionsToRole;
 
-public sealed class AssignPermissionsToRoleCommandHandler(IApplicationDbContext context)
+public sealed class AssignPermissionsToRoleCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
     : IRequestHandler<AssignPermissionsToRoleCommand, Unit>
 {
     public async Task<Unit> Handle(AssignPermissionsToRoleCommand request, CancellationToken cancellationToken)
@@ -24,13 +24,45 @@ public sealed class AssignPermissionsToRoleCommandHandler(IApplicationDbContext 
 
         if (distinctPermissionIds.Count > 0)
         {
-            var permissions = await context.Permissions
-                .Where(p => distinctPermissionIds.Contains(p.Id))
-                .ToListAsync(cancellationToken);
-
-            if (permissions.Count != distinctPermissionIds.Count)
+            var validCount = await context.Permissions.CountAsync(p => distinctPermissionIds.Contains(p.Id), cancellationToken);
+            if (validCount != distinctPermissionIds.Count)
                 throw new NotFoundException(nameof(Permission), "one or more requested permission IDs");
         }
+
+        var existingPermissionIds = role.RolePermissions.Select(rp => rp.PermissionId).ToList();
+        
+        var addedPermissionIds = distinctPermissionIds.Except(existingPermissionIds).ToList();
+        var removedPermissionIds = existingPermissionIds.Except(distinctPermissionIds).ToList();
+        var changedPermissionIds = addedPermissionIds.Concat(removedPermissionIds).ToList();
+
+        if (changedPermissionIds.Count > 0)
+        {
+            var userRoleId = await context.Users
+                .Where(u => u.Id == currentUserService.UserId)
+                .Select(u => u.RoleId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            var userPermissionNames = await context.RolePermissions
+                .Where(rp => rp.RoleId == userRoleId)
+                .Select(rp => rp.Permission.Name)
+                .ToListAsync(cancellationToken);
+
+            var userPermissions = userPermissionNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var changedPermissions = await context.Permissions
+                .Where(p => changedPermissionIds.Contains(p.Id))
+                .ToListAsync(cancellationToken);
+
+            var unauthorizedPermissions = changedPermissions.Where(p => !userPermissions.Contains(p.Name)).ToList();
+
+            if (unauthorizedPermissions.Any())
+            {
+                var unauthorizedNames = string.Join(", ", unauthorizedPermissions.Select(p => p.Name));
+                throw new UnauthorizedException($"Privilege Escalation Detected: You can only assign or revoke permissions that you currently possess. You are missing: {unauthorizedNames}");
+            }
+        }
+
+
 
         // Replace the full set (idempotent)
         context.RolePermissions.RemoveRange(role.RolePermissions);

@@ -21,5 +21,14 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
 
         builder.Property(r => r.Description)
             .HasMaxLength(500);
+
+        builder.Property(r => r.Color)
+            .HasMaxLength(10);
+
+        builder.Property(r => r.IsActive)
+            .HasDefaultValue(true);
+
+        builder.Property(r => r.IsSystemRole)
+            .HasDefaultValue(false);
     }
 }

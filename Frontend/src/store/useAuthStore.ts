@@ -6,6 +6,7 @@ interface DecodedToken {
   sub?: string;
   email?: string;
   username?: string;
+  roleId?: string;
   permission?: string | string[];
   permissions?: string | string[];
   exp?: number;
@@ -16,6 +17,7 @@ interface CurrentUser {
   id: string;
   email: string;
   username: string;
+  roleId?: string;
   requiresPasswordChange?: boolean;
 }
 
@@ -60,7 +62,13 @@ export const useAuthStore = create<AuthState>()(
             accessToken,
             refreshToken,
             permissions: parsedPermissions,
-            currentUser: decoded.sub ? { id: decoded.sub, email: userEmail, username: userName, requiresPasswordChange: isPasswordChangeForced } : null,
+            currentUser: decoded.sub ? { 
+              id: decoded.sub, 
+              email: userEmail, 
+              username: userName, 
+              roleId: decoded.roleId,
+              requiresPasswordChange: isPasswordChangeForced 
+            } : null,
             isAuthenticated: true,
           });
         } catch (error) {
