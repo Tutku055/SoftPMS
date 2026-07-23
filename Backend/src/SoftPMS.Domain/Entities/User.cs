@@ -16,7 +16,7 @@ public class User : BaseEntity
 
     public DateTime? RefreshTokenExpiryTime { get; set; }
 
-    public bool RequiresPasswordChange { get; set; } = false;
+    public bool RequiresPasswordChange { get; set; } = true;
 
     public bool IsSystemUser { get; set; } = false;
 

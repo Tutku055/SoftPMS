@@ -39,6 +39,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { apiClient } from '../../config/apiClient';
 import type { RoleDto } from './types';
 import { useCreateUser } from './hooks/useCreateUser';
+import { getUsers } from './api/users';
 import ExcelJS from 'exceljs';
 import { getAdaptedRoleColor } from '../../theme/colorUtils';
 
@@ -145,16 +146,62 @@ export const UsersPage = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleCreateUserSubmit = () => {
+  const handleCreateUserSubmit = async () => {
     if (!validateCreateForm()) return;
+
+    const emailTrimmed = createForm.email.trim().toLowerCase();
+
+    // Local check
+    if (data?.items?.some((u) => u.email.trim().toLowerCase() === emailTrimmed)) {
+      setCreateFormErrors((prev) => ({ ...prev, email: 'This email is already in use.' }));
+      return;
+    }
+
+    try {
+      const searchResult = await getUsers({
+        pageNumber: 1,
+        pageSize: 1,
+        filters: [{ field: 'email', operator: 'equals', value: createForm.email.trim() }]
+      });
+
+      if (searchResult && searchResult.totalCount > 0) {
+        setCreateFormErrors(prev => ({ ...prev, email: 'This email is already in use.' }));
+        return;
+      }
+    } catch (err) {
+      console.error('Failed to check email uniqueness:', err);
+    }
+
     createUserMutation.mutate(createForm, {
       onSuccess: () => {
         setCreateDialogOpen(false);
         setCreateForm({ username: '', email: '', password: '', roleId: '', isActive: true });
+        setCreateFormErrors({});
       },
       onError: (error: any) => {
-        const errorMsg = error.response?.data?.detail || 'An error occurred while creating user';
-        alert(errorMsg); // Temporary simplistic error handling
+        const responseData = error.response?.data;
+        const serverMsg =
+          responseData?.errors?.message ||
+          (typeof responseData?.errors === 'string' ? responseData.errors : null) ||
+          responseData?.detail ||
+          responseData?.message;
+
+        let userFriendlyMsg = 'This email is already in use.';
+
+        if (typeof serverMsg === 'string' && serverMsg.trim()) {
+          const lower = serverMsg.toLowerCase();
+          if (lower.includes('username')) {
+            userFriendlyMsg = 'This username is already in use.';
+            setCreateFormErrors((prev) => ({ ...prev, username: userFriendlyMsg }));
+            return;
+          } else if (lower.includes('email')) {
+            userFriendlyMsg = 'This email is already in use.';
+          } else {
+            userFriendlyMsg = serverMsg;
+          }
+        }
+
+        setCreateFormErrors((prev) => ({ ...prev, email: userFriendlyMsg }));
       }
     });
   };

@@ -9,5 +9,6 @@ public record UserDto(
     string Email,
     bool IsActive,
     bool IsSystemUser,
+    bool RequiresPasswordChange,
     SoftPMS.Application.DTOs.Role.RoleDto? Role
 );

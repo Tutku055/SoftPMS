@@ -16,11 +16,13 @@ public sealed class CreateUserCommandHandler(
 {
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        var exists = await context.Users.AnyAsync(u => u.Username == request.Dto.Username, cancellationToken);
+        var normalizedUsername = request.Dto.Username.Trim().ToLower();
+        var exists = await context.Users.AnyAsync(u => u.Username.ToLower() == normalizedUsername, cancellationToken);
         if (exists)
             throw new Domain.Exceptions.DomainException($"Username '{request.Dto.Username}' is already taken.");
 
-        exists = await context.Users.AnyAsync(u => u.Email == request.Dto.Email, cancellationToken);
+        var normalizedEmail = request.Dto.Email.Trim().ToLower();
+        exists = await context.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
         if (exists)
             throw new Domain.Exceptions.DomainException($"Email '{request.Dto.Email}' is already taken.");
 
@@ -35,15 +37,31 @@ public sealed class CreateUserCommandHandler(
         {
             Id = Guid.NewGuid(),
             EmployeeId = request.Dto.EmployeeId,
-            Username = request.Dto.Username,
-            Email = request.Dto.Email,
+            Username = request.Dto.Username.Trim(),
+            Email = request.Dto.Email.Trim(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Dto.Password),
             RoleId = request.Dto.RoleId,
-            IsActive = request.Dto.IsActive
+            IsActive = request.Dto.IsActive,
+            RequiresPasswordChange = true
         };
 
         await context.Users.AddAsync(user, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            if (ex.InnerException?.Message.Contains("IX_Users_Email") == true || ex.Message.Contains("IX_Users_Email"))
+            {
+                throw new Domain.Exceptions.DomainException($"Email '{request.Dto.Email}' is already taken.");
+            }
+            if (ex.InnerException?.Message.Contains("IX_Users_Username") == true || ex.Message.Contains("IX_Users_Username"))
+            {
+                throw new Domain.Exceptions.DomainException($"Username '{request.Dto.Username}' is already taken.");
+            }
+            throw;
+        }
 
         return mapper.Map<UserDto>(user);
     }

@@ -17,11 +17,27 @@ import logoImg from '../../../../assets/images/SoftPMSLogo.png';
 export const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { mutate, isPending, isError } = useLogin();
+  const { mutate, isPending, isError, error } = useLogin();
   
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const wrapperClass = isDark ? styles.wrapperDark : styles.wrapperLight;
+
+  const getErrorMessage = () => {
+    if (!error) return 'Invalid credentials. Please try again.';
+    const anyErr = error as any;
+    const responseData = anyErr.response?.data;
+    const serverMsg =
+      responseData?.errors?.message ||
+      (typeof responseData?.errors === 'string' ? responseData.errors : null) ||
+      responseData?.detail ||
+      responseData?.message;
+
+    if (typeof serverMsg === 'string' && serverMsg.trim()) {
+      return serverMsg;
+    }
+    return 'Invalid credentials. Please try again.';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +85,7 @@ export const Login = () => {
                   }
                 }}
               >
-                Invalid credentials. Please try again.
+                {getErrorMessage()}
               </Alert>
             )}
 

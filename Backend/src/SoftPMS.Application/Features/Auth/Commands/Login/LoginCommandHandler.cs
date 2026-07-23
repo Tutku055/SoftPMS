@@ -18,12 +18,19 @@ public sealed class LoginCommandHandler(
 {
     public async Task<LoginResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
+        var normalizedUsername = request.Username.Trim().ToLower();
+
         var user = await context.Users
             .Include(u => u.Role)
                 .ThenInclude(r => r.RolePermissions)
                     .ThenInclude(rp => rp.Permission)
-            .FirstOrDefaultAsync(u => u.Username == request.Username && u.IsActive, cancellationToken)
-            ?? throw new NotFoundException(nameof(Domain.Entities.User), request.Username);
+            .FirstOrDefaultAsync(u => u.Username.ToLower() == normalizedUsername, cancellationToken);
+
+        if (user == null)
+            throw new DomainException("Invalid credentials.");
+
+        if (!user.IsActive)
+            throw new DomainException("User is not active.");
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new DomainException("Invalid credentials.");
